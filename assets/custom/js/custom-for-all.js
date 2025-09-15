@@ -21,6 +21,27 @@ $(document).on("click", ".remove_image", function (event) {
 
 $(document).ready(function () {
 
+    $(document).on('click', '.open_return_popup', function () {
+        let id = $(this).data('id'); // order ID
+        let controller = $(this).data('control'); // controller name from PHP
+        console.log("Controller:", controller); // Debugging line
+
+        // Show modal
+        $('#returnModal').modal('show');
+
+        // Optional: load content dynamically
+        $.ajax({
+            url: BASE_URL + controller + "/get_return_form/" + id, // <-- make a controller method
+            type: "GET",
+            success: function (response) {
+                $('#returnModalContent').html(response);
+            },
+            error: function () {
+                $('#returnModalContent').html('<p class="text-danger">Failed to load content.</p>');
+            }
+        });
+    });
+
 
     var $panel = $('.menu-list').find('.active');
     if ($panel.length > 0) {
@@ -340,7 +361,7 @@ $(document).ready(function () {
         var method = $(this).attr('data-method');
 
         if (data_id > 0) {
-            $url = method +'/' + data_id;
+            $url = method + '/' + data_id;
         }
         $.ajax({
             type: 'POST',

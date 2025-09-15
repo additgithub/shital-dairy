@@ -17,45 +17,52 @@ $order_date = array(
     'type' => 'date',
     'value' => $edit_mode ? $data_info->order_date : (set_value('order_date') ?: date('Y-m-d')),
     'class' => "form-control",
-    'required' => true
+    'required' => true,
+    "readonly" => true
 );
 $customer_name = array(
     'name' => 'customer_name',
     'id' => 'customer_name',
     'value' => $edit_mode ? $data_info->customer_name : set_value('customer_name'),
     'class' => "form-control",
-    'required' => true
+    'required' => true,
+    "readonly" => true
 );
 $contact_no = array(
     'name' => 'contact_no',
     'id' => 'contact_no',
     'value' => $edit_mode ? $data_info->contact_no : set_value('contact_no'),
     'class' => "form-control",
-    'required' => true
+    'required' => true,
+    "readonly" => true
 );
 $remarks = array(
     'name' => 'remarks',
     'id' => 'remarks',
     'value' => $edit_mode ? $data_info->remarks : set_value('remarks'),
-    'class' => "form-control"
+    'class' => "form-control",
+    "readonly" => true
 );
 $delivery_charges = array(
     'name' => 'delivery_charges',
     'id' => 'delivery_charges',
     'value' => $edit_mode ? $data_info->delivery_charges : set_value('delivery_charges', 0),
-    'class' => "form-control delivery_charges"
+    'class' => "form-control delivery_charges",
+    "readonly" => true
 );
 $dry_ice_box_charges = array(
     'name' => 'dry_ice_box_charges',
     'id' => 'dry_ice_box_charges',
     'value' => $edit_mode ? $data_info->dry_ice_box_charges : set_value('dry_ice_box_charges', 0),
-    'class' => "form-control dry_ice_box_charges"
+    'class' => "form-control dry_ice_box_charges",
+    "readonly" => true
 );
 $other_charges = array(
     'name' => 'other_charges',
     'id' => 'other_charges',
     'value' => $edit_mode ? $data_info->other_charges : set_value('other_charges', 0),
-    'class' => "form-control other_charges"
+    'class' => "form-control other_charges",
+    "readonly" => true
 );
 $total_amount = $edit_mode ? $data_info->amount : 0;
 
@@ -63,16 +70,16 @@ $form_attr = array('class' => 'default_form', 'id' => 'order_frm', 'autocomplete
 $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Submit', 'class' => 'btn btn-success btn-cons');
 ?>
 
-<div class="page-title">
+<!-- <div class="page-title">
     <h3><?= $page_title ?></h3>
-</div>
+</div> -->
 
 <div class="grid simple">
-    <div class="grid-title no-border">
+    <!-- <div class="grid-title no-border">
         <h4>Order Information</h4>
-    </div>
+    </div> -->
     <div class="grid-body no-border">
-        <?= form_open_multipart(base_url($this->controllers . '/submit-form'), $form_attr); ?>
+        <?= form_open_multipart(base_url($this->controllers . '/return-qty-submit'), $form_attr); ?>
         <?php if ($edit_mode) echo form_hidden($DataID, $order_id); ?>
 
         <div class="row">
@@ -80,13 +87,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                 <label>Order No</label> -->
             <?= form_input($order_no); ?>
             <!-- </div> -->
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label>Order Date<span class="spn_required">*</span></label>
                 <?= form_input($order_date); ?>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label>Customer<span class="spn_required">*</span></label>
-                <select name="customer_name" class="form-control select2" required>
+                <select name="customer_name" class="form-control select2" required disabled>
                     <option value="">Select Customer</option>
                     <?php
                     if (isset($customers) && !empty($customers)) {
@@ -98,15 +105,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                     ?>
                 </select>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label>Contact No<span class="spn_required">*</span></label>
                 <?= form_input($contact_no); ?>
             </div>
-        </div>
-        <div class="row">
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label>Delivery Time<span class="spn_required">*</span></label>
-                <select name="delivery_time" id="delivery_time" class="form-control select2" required>
+                <select name="delivery_time" id="delivery_time" class="form-control select2" required disabled>
                     <option value="">Select Delivery Time</option>
                     <option value="Morning" <?= $edit_mode && $data_info->delivery_time == 'Morning' ? 'selected' : '' ?>>Morning</option>
                     <option value="Evening" <?= $edit_mode && $data_info->delivery_time == 'Evening' ? 'selected' : '' ?>>Evening</option>
@@ -118,7 +123,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         <hr>
         <h4>Order Items</h4>
         <div id="items_container"></div>
-        <button type="button" class="btn btn-primary btn-sm" id="addItemBtn">+ Add Item</button>
+        <!-- <button type="button" class="btn btn-primary btn-sm" id="addItemBtn">+ Add Item</button> -->
 
         <hr>
         <div class="row">
@@ -149,7 +154,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
 
         <div class="form-actions pull-right">
             <?= form_submit($submit_btn); ?>
-            <a class="btn btn-white cancel_button" href="javascript:;">Cancel</a>
+            <a class="btn btn-white close" data-dismiss="modal" aria-label="Close" href="javascript:;">Cancel</a>
         </div>
         <?= form_close(); ?>
     </div>
@@ -162,8 +167,10 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
     console.log('Items:', items);
 
     function addItemRow(existing = null) {
+        const detail_id = existing ? existing.order_dtl_id : '';
         const item_id = existing ? existing.item_id : '';
         const qty = existing ? existing.qty : 1;
+        const return_qty = existing ? existing.return_qty : 0;
         const available_pkt = existing ? (existing.total_purchase_qty_pkt - existing.total_sells_qty_pkt) : 0;
         console.log('Available PKT:', available_pkt);
         const amount = existing ? parseFloat(existing.amount).toFixed(2) : '0.00';
@@ -171,7 +178,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         const html = `<div class="row custom_form_row item_row" data-index="${itemIndex}">
         <div class="form-group col-md-4 cus_filds">
             <label>Item</label>
-            <select name="item_id[]" class="form-control select2 item_select" required onchange="updateRowPrice(this)">
+            <select name="item_id[${detail_id}]" class="form-control select2 item_select" required onchange="updateRowPrice(this)">
                 <option value="">Select Item</option>
                 ${items.map(it => {
                         const availableAttr = `data-available="${it.total_purchase_qty_pkt - it.total_sells_qty_pkt}"`;
@@ -185,19 +192,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Qty (KG)</label>
-            <input type="number" name="item_qty[]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required>
+            <input type="number" name="item_qty[${detail_id}]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required readonly>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Price Per KG</label>
-            <input type="number" name="price_per_kg[]" class="form-control price_per_kg" min="1">
+            <label>Return Qty (KG)</label>
+            <input type="number" name="return_qty[${detail_id}]" class="form-control return_qty" value="${return_qty}" min="1" oninput="updateRowPrice(this)">
         </div>
-        <div class="form-group col-md-2 cus_filds">
-            <label>Total Amount</label>
-            <input type="text" name="item_total[]" class="form-control item_total" value="${amount}" readonly>
-        </div>
-        <div class="form-group col-md-2 cus_filds">
-            <button type="button" class="btn btn-danger removeItemBtn">Remove</button>
-        </div>
+        
     </div>`;
 
         $('#items_container').append(html);
@@ -206,68 +207,30 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
     }
 
     function updateRowPrice(el) {
-        // const row = $(el).closest('.item_row');
-        // const select = row.find('.item_select');
-        // const qtyInput = row.find('.item_qty');
-        // const totalInput = row.find('.item_total');
-        // const price_per_kg = row.find('.price_per_kg');
-        // const sellingPrice = parseFloat(select.find('option:selected').data('price')) || 0;
 
         const row = $(el).closest('.item_row');
         const select = row.find('.item_select');
         const qtyInput = row.find('.item_qty');
-        const priceInput = row.find('.price_per_kg');
-        const totalInput = row.find('.item_total');
+        const returnQtyInput = row.find('.return_qty');
 
-        // const price = parseFloat(select.find('option:selected').data('price')) || 0;
-        const selectedPrice = parseFloat(select.find('option:selected').data('price')) || 0;
-        let price = parseFloat(priceInput.val()) || 0;
-
-        if (!price) {
-            price = selectedPrice;
-            priceInput.val(price.toFixed(2));
+        if (returnQtyInput.val() > qtyInput.val()) {
+            alert('Return quantity cannot be greater than ordered quantity.');
+            returnQtyInput.val('');
+            // row.find('.item_total').val('0.00');
+            // calculateTotal();
+            return;
+        } else if (returnQtyInput.val() < 0) {
+            alert('Return quantity cannot be negative.');
+            returnQtyInput.val('');
+            return;
         }
-
-        const qty = parseFloat(qtyInput.val()) || 0;
-        const lineTotal = price * qty;
-        // console.log('Line Total:', lineTotal); 
-        // const available = parseInt(select.find('option:selected').data('available')) || 1;
-        // qtyInput.attr('max', available);
-        // const available = select.find('option:selected').data('available') || 0;
-        // const availableLbl = select.find('option:selected').data('availableLbl') || 0;
-        // const reorder = parseInt(select.find('option:selected').data('reorder')) || 0;
-
-        // console.log('Available PKT:', available);
-        // if (available !== undefined && parseInt(available) > 0 && reorder === 0) {
-        //     console.log('Setting max qty:', available);
-        //     qtyInput.attr('max', parseInt(available));
-        //     qtyInput.attr('title', 'Available: ' + parseInt(available) + ' pkt');
-        //     if (parseInt(available) > 0) {
-        //         if (qty > parseInt(available)) {
-        //             qtyInput.val(parseInt(available)); // Reset to max if current qty exceeds available
-        //             alert('Quantity exceeds available stock. Resetting to maximum available.');
-
-        //         }
-        //     }
-        // } else {
-        //     qtyInput.removeAttr('max'); // Always allow if no limit
-        // }
-        priceInput.val(price);
-        qtyInput.data('price', price);
-        console.log(lineTotal.toFixed(2), 'lineTotal');
-        row.find('.item_total').val(lineTotal.toFixed(2));
-        // totalInput.val(lineTotal.toFixed(2));
-        // availble_qty.val(available + ' Available PKT');
-        // availble_qty.val(available + ' Available PKT');
 
         calculateTotal();
     }
 
     function calculateTotal() {
         let total = 0;
-        // $('.price_per_kg').each(function() {
-        //     $('.item_total').val(parseFloat($(this).val()));
-        // });
+
         $('.item_total').each(function() {
             total += parseFloat($(this).val()) || 0;
         });
@@ -283,7 +246,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         $('#total_amount').val(total.toFixed(2));
     }
 
-    //$(document).on('click', '#addItemBtn', () => addItemRow());
+
     let addItemTimeout;
     $(document).on('click', '#addItemBtn', function() {
         clearTimeout(addItemTimeout);

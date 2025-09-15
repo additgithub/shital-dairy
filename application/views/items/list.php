@@ -1,8 +1,8 @@
 <style>
     .modal-content {
-        padding-left: 0px !important; 
-        padding-right: 0px !important; 
-        padding-top: 0px !important; 
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        padding-top: 0px !important;
     }
 
     .modal-dialog {
@@ -10,6 +10,7 @@
         max-width: 95% !important;
         margin: 3% auto !important;
     }
+
     .switch {
         position: relative;
         display: inline-block;
@@ -17,7 +18,7 @@
         height: 34px;
     }
 
-    .switch input { 
+    .switch input {
         opacity: 0;
         width: 0;
         height: 0;
@@ -48,15 +49,15 @@
         transition: .4s;
     }
 
-    input:checked + .slider {
+    input:checked+.slider {
         background-color: #2196F3;
     }
 
-    input:focus + .slider {
+    input:focus+.slider {
         box-shadow: 0 0 1px #2196F3;
     }
 
-    input:checked + .slider:before {
+    input:checked+.slider:before {
         -webkit-transform: translateX(26px);
         -ms-transform: translateX(26px);
         transform: translateX(26px);
@@ -81,7 +82,9 @@
         margin-right: -4px;
         margin-bottom: 10px;
     }
-    .custom_form_row input, .custom_form_row select {
+
+    .custom_form_row input,
+    .custom_form_row select {
         min-width: 130px;
     }
 
@@ -89,6 +92,7 @@
         padding: 0px 4px;
         margin: 0px;
     }
+
     .btn.btn-danger.cus_filds {
         margin: 0px !important;
         padding: 8px 10px !important;
@@ -96,12 +100,6 @@
         margin-top: 27px !important;
         margin-left: 4px !important;
     }
-
-
-
-
-
-
 </style>
 <div class="content">
     <?php
@@ -123,9 +121,9 @@
 
                                 <th width="20%">Item Code</th>
                                 <th width="20%">Item Name</th>
-                                <th width="20%">Size</th>
-                                <th width="20%">Factor</th>
-                                <th width="20%">Selling Price</th>
+                                <!-- <th width="20%">Size</th> -->
+                                <!-- <th width="20%">Factor</th> -->
+                                <th width="20%"> Price Per KG</th>
                                 <th width="20%" class="hidden-phone">Action</th>
                             </tr>
                         </thead>
@@ -138,5 +136,3 @@
         </div>
     </div>
 </div>
-
-

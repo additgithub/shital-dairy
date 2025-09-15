@@ -67,7 +67,7 @@ class Orders extends CI_Controller
                 // ✅ get items for dropdown
                 $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id');
                 $data_found = 1;
-                 $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
             }
         }
         if ($data_found == 0) {
@@ -90,6 +90,7 @@ class Orders extends CI_Controller
                 ->set_rules('order_date', 'Order Date', 'required')
                 ->set_rules('customer_name', 'Customer Name', 'required')
                 ->set_rules('contact_no', 'Contact No', 'required')
+                ->set_rules('delivery_time', 'Delivery Time', 'required')
                 ->set_rules('item_id[]', 'Item', 'required')
                 ->set_rules('item_qty[]', 'Qty', 'required');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
@@ -203,10 +204,11 @@ class Orders extends CI_Controller
         if ($this->tank_auth->get_user_role_id() == '2') {
             $this->datatables->where('created_by = ' . $this->tank_auth->get_user_id());
         }
-        $this->datatables->select($this->PrimaryKey . ', order_no,order_date,customer_name,contact_no,amount')
-            ->from($this->table_name)
-            ->add_column('is_paid', '$1', 'order_paid_row(' . $this->PrimaryKey . ')')
-            ->add_column('id_delivered', '$1', 'order_delivered_row(' . $this->PrimaryKey . ')')
+        $this->datatables->select($this->PrimaryKey . ', ord.order_no,ord.order_date,cus.customer_name,ord.contact_no,ord.amount');
+        $this->datatables->join(TBL_CUSTOMER . ' cus', 'cus.customer_id = ord.customer_name', 'LEFT')
+            ->from($this->table_name . ' ord')
+            // ->add_column('is_paid', '$1', 'order_paid_row(' . $this->PrimaryKey . ')')
+            // ->add_column('id_delivered', '$1', 'order_delivered_row(' . $this->PrimaryKey . ')')
             ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
         $this->datatables->unset_column($this->PrimaryKey);
         $this->datatables->order_by($this->PrimaryKey, 'DESC');
@@ -220,7 +222,7 @@ class Orders extends CI_Controller
         $invoice_url = base_url("orders/invoice_pdf/" . $id);
         $action = <<<EOF
             <div class="tooltip-top">
-                <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-pencil"></i></a>
+                <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_return_popup" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-pencil"></i></a>
                 <a data-original-title="Download Invoice" data-placement="top" data-toggle="tooltip" href="{$invoice_url}"  class="btn btn-default btn-equal btn-mini" target="_blank"><i class="fa fa-download"></i></a>
                 <a data-original-title="Remove {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal delete_btn btn-mini" data-id="{$id}" data-method="{$this->controllers}"><i class="fa fa-trash-o"></i></a>
             </div>
@@ -393,5 +395,69 @@ EOF;
                 die;
             }
         }
+    }
+    function get_return_form($id)
+    {
+        $data_found = 0;
+        if ($id > 0) {
+            $data_obj = $this->Common->get_info($id, $this->table_name, $this->PrimaryKey);
+            if (is_object($data_obj) && count((array) $data_obj) > 0) {
+                $data["data_info"] = $data_obj;
+
+                $join = array(
+                    array('table' => TBL_RETURN_QTY . ' r', 'on' => 'r.order_dtl_id = d.order_dtl_id', 'type' => 'LEFT')
+                );
+
+                // ✅ get related order items
+                $data["order_items"] = $this->Common->get_all_info(1, TBL_ORDER_DTL . ' d', 1, "d.order_hdr_id = $id", '', false, $join);
+
+                // ✅ get items for dropdown
+                $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id');
+                $data_found = 1;
+                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+            }
+        }
+        if ($data_found == 0) {
+            redirect('/');
+        }
+
+        $data['page_title'] = "Edit " . $this->title;
+        $this->load->view($this->view_name . '/return_form', $data);
+    }
+    function return_qty_submit()
+    {
+        $exist = $this->Common->check_is_exists(TBL_RETURN_QTY, $this->input->post('order_hdr_id'), 'order_hdr_id');
+        if ($exist > 0) {
+            foreach ($this->input->post('item_id') as $index => $item_id) {
+                $items = array(
+                    'item_id' => $item_id,
+                    // 'qty' => $this->input->post('item_qty')[$index],
+                    'return_qty' => $this->input->post('return_qty')[$index],
+                    'order_dtl_id' => $index,
+                    'order_hdr_id'     => $this->input->post('order_hdr_id'),
+                    'created_on'   => date("Y-m-d H:i:s"),
+                    'created_by'   => $this->tank_auth->get_user_id(),
+                    // 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
+                );
+                $this->Common->update_info($index, TBL_RETURN_QTY, $items, 'order_dtl_id');
+            }
+        } else {
+            foreach ($this->input->post('item_id') as $index => $item_id) {
+                $items = array(
+                    'item_id' => $item_id,
+                    // 'qty' => $this->input->post('item_qty')[$index],
+                    'return_qty' => $this->input->post('return_qty')[$index],
+                    'order_dtl_id' => $index,
+                    'order_hdr_id'     => $this->input->post('order_hdr_id'),
+                    'created_on'   => date("Y-m-d H:i:s"),
+                    'created_by'   => $this->tank_auth->get_user_id(),
+                    // 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
+                );
+                $this->Common->add_info(TBL_RETURN_QTY, $items);
+            }
+        }
+        $response = array("status" => "ok", "heading" => "Updated", "message" => "Return Qty updated successfully.");
+        echo json_encode($response);
+        exit;
     }
 }

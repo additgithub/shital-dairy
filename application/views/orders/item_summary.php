@@ -6,7 +6,7 @@
     }
 
     .custom-summary-table th {
-        background-color: #ffffff;
+        background-color: #00acf0;
         color: #fff;
         padding: 12px;
         text-align: center;

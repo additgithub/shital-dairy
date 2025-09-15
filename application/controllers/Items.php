@@ -58,8 +58,8 @@ class Items extends CI_Controller {
             $this->form_validation
                     ->set_rules('item_name', 'Item Name', 'required')
                     ->set_rules('item_code', 'Item Code', 'required')
-                    ->set_rules('size', 'Item Size', 'required')
-                    ->set_rules('factor', 'Factor', 'required')
+                    // ->set_rules('size', 'Item Size', 'required')
+                    // ->set_rules('factor', 'Factor', 'required')
                     ->set_rules('selling_price', 'Item Selling Price', 'required');
             $this->form_validation->set_message('required', 'The %s field is required.');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
@@ -71,8 +71,8 @@ class Items extends CI_Controller {
                 $post_data = array(
                     "item_code" => $this->input->post('item_code'),
                     "item_name" => $this->input->post('item_name'),
-                    "size" => $this->input->post('size'),
-                    "factor" => $this->input->post('factor'),
+                    // "size" => $this->input->post('size'),
+                    // "factor" => $this->input->post('factor'),
                     "selling_price" => $this->input->post('selling_price'),
                     // "reorder" => ($this->input->post('reorder') == 1) ? 1 : 0,
                 );
@@ -109,7 +109,7 @@ class Items extends CI_Controller {
 
     function manage() {
 
-        $this->datatables->select($this->PrimaryKey . ', item_code,item_name,size,factor,selling_price')
+        $this->datatables->select($this->PrimaryKey . ', item_code,item_name,selling_price')
                 ->from($this->table_name)
                 ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
         $this->datatables->unset_column($this->PrimaryKey);

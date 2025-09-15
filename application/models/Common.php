@@ -522,7 +522,7 @@ class Common extends CI_Model
 
         $sql = "
         SELECT
-            CONCAT(i.item_name, ' (', i.size, ')') AS item_name,
+            i.item_name AS item_name,
             SUM(d.qty) AS qty_pkt,
             FORMAT(SUM(d.qty * i.factor), 3) AS qty_kg,
             SUM(d.qty * i.selling_price) AS totalamt
