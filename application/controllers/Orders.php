@@ -37,9 +37,10 @@ class Orders extends CI_Controller
     {
         $data['page_title'] = "Add New " . $this->title;
         // $data['items'] = $this->db->get('tbl_item')->result_array();
-        $this->db->select("i.*, s.total_purchase_qty_pkt, s.total_sells_qty_pkt")
+        $this->db->select("i.*,(CONCAT(i.item_code,' - ',i.item_name)) as item_name, s.total_purchase_qty_pkt, s.total_sells_qty_pkt")
             ->from("tbl_item i")
-            ->join("tbl_item_stock s", "i.item_id = s.item_id", "left");
+            ->join("tbl_item_stock s", "i.item_id = s.item_id", "left")
+            ->order_by("i.item_code", "ASC");
         $data['items'] = $this->db->get()->result();
         $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
         // print_r($data['customers']);die;
@@ -65,7 +66,7 @@ class Orders extends CI_Controller
                 $data["order_items"] = $this->Common->get_all_info('', TBL_ORDER_DTL, 'order_hdr_id', "order_hdr_id = $id");
 
                 // ✅ get items for dropdown
-                $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id');
+                $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id','','*,(CONCAT(item_code," - ",item_name)) as item_name',false,false,false,array('field' => 'item_code','order' => 'ASC'));
                 $data_found = 1;
                 $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
             }
@@ -142,6 +143,7 @@ class Orders extends CI_Controller
                             $items[] = [
                                 'item_id' => $item_id,
                                 'qty' => $this->input->post('item_qty')[$index],
+                                'price_per_item' => $this->input->post('price_per_kg')[$index],
                                 'amount' => $this->input->post('item_total')[$index],
                                 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
                             ];
@@ -175,6 +177,7 @@ class Orders extends CI_Controller
                             $items[] = [
                                 'item_id' => $item_id,
                                 'qty' => $this->input->post('item_qty')[$index],
+                                'price_per_item' => $this->input->post('price_per_kg')[$index],
                                 'amount' => $this->input->post('item_total')[$index],
                                 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
                             ];
@@ -233,7 +236,12 @@ EOF;
     public function invoice_pdf($id)
     {
         $order = $this->Common->get_info($id, $this->table_name, $this->PrimaryKey);
-        $order_items = $this->Common->get_all_info('', TBL_ORDER_DTL, 'order_hdr_id', "order_hdr_id = $id");
+
+        $join = array(
+            array('table' => TBL_RETURN_QTY . ' r', 'on' => 'r.order_dtl_id = d.order_dtl_id', 'type' => 'LEFT')
+        );
+
+        $order_items = $this->Common->get_all_info('', TBL_ORDER_DTL.' d', 'd.order_hdr_id', "d.order_hdr_id = $id",'d.*,r.return_qty', false, $join);
 
         if (!$order) show_404();
 
@@ -327,12 +335,12 @@ EOF;
             'fontDir' => [FCPATH . 'vendor/mpdf/mpdf/ttfonts'], // Direct path to your fonts
             'fontdata' => [
                 'notosansgujarati' => [
-                    'R' => 'shruti.ttf',
-                    'useOTL' => 0xFF, // Or 0x00 if errors
-                    'useKashida' => 0,
+                    'R' => 'NotoSansGujarati-Regular.ttf',
+                    'useOTL' => 0x00, // Disable OTL features to avoid GPOS issues
+                    'useKashida' => 0, // Disable kashida (Arabic justification)
                 ],
             ],
-            'default_font' => 'shruti',
+            'default_font' => 'notosansgujarati',
             'useSubstitutions' => false, // Disable font substitutions
             'showImageErrors' => true, // Helpful for debugging
 
@@ -409,10 +417,10 @@ EOF;
                 );
 
                 // ✅ get related order items
-                $data["order_items"] = $this->Common->get_all_info(1, TBL_ORDER_DTL . ' d', 1, "d.order_hdr_id = $id", '', false, $join);
+                $data["order_items"] = $this->Common->get_all_info(1, TBL_ORDER_DTL . ' d', 1, "d.order_hdr_id = $id", 'd.*,r.return_qty', false, $join);
 
                 // ✅ get items for dropdown
-                $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id');
+                $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id','','*,(CONCAT(item_code," - ",item_name)) as item_name',false,false,false,array('field' => 'item_code','order' => 'ASC'));
                 $data_found = 1;
                 $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
             }
@@ -427,6 +435,7 @@ EOF;
     function return_qty_submit()
     {
         $exist = $this->Common->check_is_exists(TBL_RETURN_QTY, $this->input->post('order_hdr_id'), 'order_hdr_id');
+        $total = 0;
         if ($exist > 0) {
             foreach ($this->input->post('item_id') as $index => $item_id) {
                 $items = array(
@@ -440,6 +449,18 @@ EOF;
                     // 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
                 );
                 $this->Common->update_info($index, TBL_RETURN_QTY, $items, 'order_dtl_id');
+                
+                $price_per_item = $this->input->post('price_per_item')[$index];
+                $return_qty = $this->input->post('return_qty')[$index];
+                $item_qty = $this->input->post('item_qty')[$index];
+
+                $sub_total = (float)$price_per_item * ((float)$item_qty - (float)$return_qty);
+                $this->Common->update_info($index, TBL_ORDER_DTL, [
+                    'amount' => $sub_total,
+                    'modified_on' => date("Y-m-d H:i:s")
+                ], 'order_dtl_id');
+
+                $total += $sub_total;
             }
         } else {
             foreach ($this->input->post('item_id') as $index => $item_id) {
@@ -454,8 +475,32 @@ EOF;
                     // 'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
                 );
                 $this->Common->add_info(TBL_RETURN_QTY, $items);
+
+                $price_per_item = $this->input->post('price_per_item')[$index];
+                $return_qty = $this->input->post('return_qty')[$index];
+                $item_qty = $this->input->post('item_qty')[$index];
+
+                $sub_total = (float)$price_per_item * ((float)$item_qty - (float)$return_qty);
+                $this->Common->update_info($index, TBL_ORDER_DTL, [
+                    'amount' => $sub_total,
+                    'modified_on' => date("Y-m-d H:i:s")
+                ], 'order_dtl_id');
+
+                $total += $sub_total;
             }
         }
+
+        $order_hdr_id = $this->input->post('order_hdr_id');
+        $order_header = $this->Common->get_info($order_hdr_id, $this->table_name, $this->PrimaryKey);
+        
+        $total = $total + (float)$order_header->delivery_charges + (float)$order_header->dry_ice_box_charges + (float)$order_header->other_charges;
+
+        $this->Common->update_info($order_hdr_id, TBL_ORDER_HDR, [
+            'amount' => $total,
+            'modified_on'   => date("Y-m-d H:i:s"),
+            'modified_by'   => $this->tank_auth->get_user_id(),
+        ], $this->PrimaryKey);
+
         $response = array("status" => "ok", "heading" => "Updated", "message" => "Return Qty updated successfully.");
         echo json_encode($response);
         exit;

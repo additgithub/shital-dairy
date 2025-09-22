@@ -98,3 +98,8 @@ input:focus+.slider {
 div.dataTables_wrapper {
   overflow: scroll;
 }
+
+.col-md-2.cus_filds:has(.removeItemBtn){
+  display: flex;
+  align-items: flex-end;
+}

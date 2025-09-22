@@ -184,11 +184,11 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             </select>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Qty (KG)</label>
+            <label>Qty (KG/PCS)</label>
             <input type="number" name="item_qty[]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Price Per KG</label>
+            <label>Price Per KG/PCS</label>
             <input type="number" name="price_per_kg[]" class="form-control price_per_kg" min="1">
         </div>
         <div class="form-group col-md-2 cus_filds">
@@ -201,6 +201,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
     </div>`;
 
         $('#items_container').append(html);
+        $("#items_container select.select2").select2();
         itemIndex++;
         calculateTotal();
     }
@@ -285,9 +286,15 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
 
     //$(document).on('click', '#addItemBtn', () => addItemRow());
     let addItemTimeout;
-    $(document).on('click', '#addItemBtn', function() {
+    $(document).off('click', '#addItemBtn').on('click', '#addItemBtn', function () {
+        let $btn = $(this);
+        $btn.prop("disabled", true); // better than attr for buttons
+
         clearTimeout(addItemTimeout);
-        addItemTimeout = setTimeout(() => addItemRow(), 100); // delay just enough to avoid rapid double trigger
+        addItemTimeout = setTimeout(() => {
+            addItemRow();
+            $btn.prop("disabled", false); // re-enable after row is added
+        }, 100);
     });
     $(document).on('click', '.removeItemBtn', function() {
         $(this).closest('.item_row').remove();

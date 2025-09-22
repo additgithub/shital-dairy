@@ -284,12 +284,12 @@ EOF;
             'fontDir' => [FCPATH . 'vendor/mpdf/mpdf/ttfonts'], // Direct path to your fonts
             'fontdata' => [
                 'notosansgujarati' => [
-                    'R' => 'shruti.ttf',
-                    'useOTL' => 0xFF, // Or 0x00 if errors
-                    'useKashida' => 0,
+                    'R' => 'NotoSansGujarati-Regular.ttf',
+                    'useOTL' => 0x00, // Disable OTL features to avoid GPOS issues
+                    'useKashida' => 0, // Disable kashida (Arabic justification)
                 ],
             ],
-            'default_font' => 'shruti',
+            'default_font' => 'notosansgujarati',
             'useSubstitutions' => false, // Disable font substitutions
             'showImageErrors' => true, // Helpful for debugging
 

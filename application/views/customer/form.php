@@ -57,7 +57,7 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div>
                         <div class="form-group col-md-4">
-                            <label class="form-label">Customer Email<span class="spn_required">*</span></label>
+                            <label class="form-label">Customer Email</label>
                             <div class="input-with-icon  right">
 
                                 <?php

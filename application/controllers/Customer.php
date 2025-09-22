@@ -57,7 +57,7 @@ class Customer extends CI_Controller {
             $error_element = error_elements();
             $this->form_validation
                     ->set_rules('customer_name', 'Customer Name', 'required')
-                    ->set_rules('customer_email', 'Customer Email', 'required')
+                    // ->set_rules('customer_email', 'Customer Email', 'required')
                     ->set_rules('customer_mobile', 'Customer Mobile', 'required')
                     ->set_rules('customer_whatsapp_number', 'Customer WhatsApp Number', 'required');
             $this->form_validation->set_message('required', 'The %s field is required.');
@@ -69,7 +69,7 @@ class Customer extends CI_Controller {
 
                 $post_data = array(
                     "customer_name" => $this->input->post('customer_name'),
-                    "customer_email" => $this->input->post('customer_email'),
+                    "customer_email" => $this->input->post('customer_email') ?? '',
                     "customer_mobile" => $this->input->post('customer_mobile'),
                     "customer_whatsapp_number" => $this->input->post('customer_whatsapp_number'),
                     "address" => ($this->input->post('address')) ? $this->input->post('address') : '',

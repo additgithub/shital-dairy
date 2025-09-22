@@ -143,7 +143,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                 <?= form_input($other_charges); ?>
             </div>
             <div class="form-group col-md-3">
-                <label>Total Amount</label>
+                <label>Total Price</label>
                 <input type="text" name="total_amount" id="total_amount" class="form-control" value="<?= $total_amount ?>" readonly>
             </div>
             <div class="form-group col-md-8">
@@ -174,11 +174,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         const available_pkt = existing ? (existing.total_purchase_qty_pkt - existing.total_sells_qty_pkt) : 0;
         console.log('Available PKT:', available_pkt);
         const amount = existing ? parseFloat(existing.amount).toFixed(2) : '0.00';
+        const price_per_item = existing ? parseFloat(existing.price_per_item).toFixed(2) : '0.00';
         let availableAttr2 = available_pkt > 0 ? available_pkt : '0 Avalaible PKT';
         const html = `<div class="row custom_form_row item_row" data-index="${itemIndex}">
         <div class="form-group col-md-4 cus_filds">
             <label>Item</label>
-            <select name="item_id[${detail_id}]" class="form-control select2 item_select" required onchange="updateRowPrice(this)">
+            <input type="hidden" name="item_id[${detail_id}]" value="${item_id}" />
+            <select name="item_id[${detail_id}]" class="form-control select2 item_select" required disabled onchange="updateRowPrice(this)">
                 <option value="">Select Item</option>
                 ${items.map(it => {
                         const availableAttr = `data-available="${it.total_purchase_qty_pkt - it.total_sells_qty_pkt}"`;
@@ -191,17 +193,28 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             </select>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Qty (KG)</label>
+            <label>Qty (KG/PCS)</label>
             <input type="number" name="item_qty[${detail_id}]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required readonly>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Return Qty (KG)</label>
-            <input type="number" name="return_qty[${detail_id}]" class="form-control return_qty" value="${return_qty}" min="1" oninput="updateRowPrice(this)">
+            <label>Price Per KG/PCS</label>
+            <input type="number" name="price_per_item[${detail_id}]" class="form-control price_per_item" min="1"  value="${price_per_item}" data-price="0" oninput="updateRowPrice(this)" required readonly>
+        </div>
+            
+        <div class="form-group col-md-2 cus_filds">
+            <label>Return Qty (KG/PCS)</label>
+            <input type="number" name="return_qty[${detail_id}]" class="form-control return_qty" value="${return_qty}" min="0" oninput="updateRowPrice(this)">
+        </div>
+
+        <div class="form-group col-md-2 cus_filds">
+            <label>Total Price</label>
+            <input type="number" name="item_total[${detail_id}]" class="form-control item_total" min="1"  value="${amount}" data-price="0" oninput="updateRowPrice(this)" required readonly>
         </div>
         
     </div>`;
 
         $('#items_container').append(html);
+        $("#items_container select.select2").select2();
         itemIndex++;
         calculateTotal();
     }
@@ -211,6 +224,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         const row = $(el).closest('.item_row');
         const select = row.find('.item_select');
         const qtyInput = row.find('.item_qty');
+        const pricePerItem = row.find('.price_per_item');
         const returnQtyInput = row.find('.return_qty');
 
         if (returnQtyInput.val() > qtyInput.val()) {
@@ -224,7 +238,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             returnQtyInput.val('');
             return;
         }
-
+        row.find('.item_total').val(pricePerItem.val()*(qtyInput.val() - returnQtyInput.val()));
         calculateTotal();
     }
 
@@ -246,16 +260,15 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         $('#total_amount').val(total.toFixed(2));
     }
 
-
-    let addItemTimeout;
-    $(document).on('click', '#addItemBtn', function() {
-        clearTimeout(addItemTimeout);
-        addItemTimeout = setTimeout(() => addItemRow(), 100); // delay just enough to avoid rapid double trigger
-    });
-    $(document).on('click', '.removeItemBtn', function() {
-        $(this).closest('.item_row').remove();
-        calculateTotal();
-    });
+    // let addItemTimeout;
+    // $(document).on('click', '#addItemBtn', function() {
+    //     clearTimeout(addItemTimeout);
+    //     addItemTimeout = setTimeout(() => addItemRow(), 100); // delay just enough to avoid rapid double trigger
+    // });
+    // $(document).on('click', '.removeItemBtn', function() {
+    //     $(this).closest('.item_row').remove();
+    //     calculateTotal();
+    // });
 
     $(document).ready(function() {
         $('#order_frm').on('keypress', function(e) {

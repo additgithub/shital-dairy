@@ -40,15 +40,14 @@
 
 <body>
     <div class="logo-container">
-        <img src="<?= base_url('assets/img/logo.jpeg') ?>" class="logo" alt="Company Logo">
+        <img src="<?= base_url('assets/img/logo.jpg') ?>" class="logo" alt="Company Logo">
     </div>
     <h2 style="text-align:center;">Item-wise Order Summary</h2>
     <table>
         <thead>
             <tr>
                 <th>Item Name</th>
-                <th>Qty PKT</th>
-                <th>Qty KG</th>
+                <th>Qty KG/PCS</th>
                 <th>Total Amount (₹)</th>
             </tr>
         </thead>
@@ -56,8 +55,7 @@
             <?php foreach ($summary as $row): ?>
                 <tr class="<?= $row->item_name == 'Total' ? 'total' : '' ?>">
                     <td><?= $row->item_name ?></td>
-                     <td><?= $row->qty_pkt ?></td>
-                                        <td><?= $row->qty_kg ?></td>
+                     <td><?= $row->qty_kg ?></td>
                     <td><?= number_format($row->totalamt, 2) ?></td>
                 </tr>
             <?php endforeach; ?>

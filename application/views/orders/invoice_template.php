@@ -98,7 +98,7 @@
             $rate = $item_data->selling_price;
             $pkt = $item_data->size;
             $name = $item_data->item_name;
-            $qty = $item->qty;
+            $qty = $item->qty - $item->return_qty;
             $amount = $item->amount;
             $total += $amount;
         ?>
@@ -115,15 +115,36 @@
        
     </tbody>
     <tfoot>
+        <?php
+            if(!empty($order->delivery_charges)){ ?>
+                <tr>
+                    <td colspan="5" style="text-align:right;"><strong>Delivery Charges:</strong></td>
+                    <td><strong><?= number_format($order->delivery_charges, 2) ?></strong></td>
+                </tr>
+        <?php } ?>
+        <?php
+            if(!empty($order->dry_ice_box_charges)){ ?>
+                <tr>
+                    <td colspan="5" style="text-align:right;"><strong>Dry Ice Box Charges:</strong></td>
+                    <td><strong><?= number_format($order->dry_ice_box_charges, 2) ?></strong></td>
+                </tr>
+        <?php } ?>
+        <?php
+            if(!empty($order->other_charges)){ ?>
+                <tr>
+                    <td colspan="5" style="text-align:right;"><strong>Other Charges:</strong></td>
+                    <td><strong><?= number_format($order->other_charges, 2) ?></strong></td>
+                </tr>
+        <?php } ?>
         <tr>
             <td colspan="5" style="text-align:right;"><strong>TOTAL RS:</strong></td>
-            <td><strong><?= number_format($total, 2) ?></strong></td>
+            <td><strong><?= number_format($order->amount, 2) ?></strong></td>
         </tr>
     </tfoot>
 </table>
 
 <div class="amount-in-words">
-    <strong>Amount in words:</strong> <?= convert_number_to_words($total) ?>
+    <strong>Amount in words:</strong> <?= convert_number_to_words($order->amount) ?>
 </div>
 <!-- <div class="stamp">DELIVERED</div> -->
 

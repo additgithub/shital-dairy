@@ -58,9 +58,9 @@
                                 <th>Purchase Qty</th>
                                 <th>Delivered Qty</th>
                                 <th>Bal. Qty (Pkt)</th>
-                                <th>Purchase Qty KG</th>
-                                <th>Delivered Qty KG</th>
-                                <th>Bal. Qty (KG)</th>
+                                <th>Purchase Qty KG/PCS</th>
+                                <th>Delivered Qty KG/PCS</th>
+                                <th>Bal. Qty (KG/PCS)</th>
 
                             </tr>
                         </thead>

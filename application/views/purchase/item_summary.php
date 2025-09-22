@@ -58,7 +58,7 @@
                             <tr>
                                 <th>Item Name</th>
                                 <th>Qty PKT</th>
-                                <th>Qty KG</th>
+                                <th>Qty KG/PCS</th>
                                 <th>Total Amount (₹)</th>
                             </tr>
                         </thead>

@@ -85,7 +85,7 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div> -->
                         <div class="form-group col-md-4">
-                            <label class="form-label">Price Per KG<span class="spn_required">*</span></label>
+                            <label class="form-label">Price Per KG/PCS<span class="spn_required">*</span></label>
                             <div class="input-with-icon  right">
 
                                 <?php

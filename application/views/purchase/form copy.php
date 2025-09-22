@@ -98,10 +98,10 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
          Item
          </div>
          <div class="form-group col-md-2 ">
-         Qty In KG
+         Qty In KG/PCS
          </div>
          <div class="form-group col-md-2 ">
-         Price In KG
+         Price In KG/PCS
          </div>
          <div class="form-group col-md-2 ">
          PKT Total

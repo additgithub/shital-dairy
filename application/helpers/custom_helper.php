@@ -3282,6 +3282,7 @@ function order_item($order_id, $items)
             'order_hdr_id' => $order_id,
             'item_id' => $item_id,
             'qty' => $qty,
+            'price_per_item' => $item['price_per_item'],
             'amount' => $item['amount'],
             'created_on' => date('Y-m-d H:i:s'),
             'modified_on' => date('Y-m-d H:i:s')

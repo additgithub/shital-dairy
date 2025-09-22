@@ -22,6 +22,10 @@ $(document).on("click", ".remove_image", function (event) {
 $(document).ready(function () {
 
     $(document).on('click', '.open_return_popup', function () {
+        if($('#display_update_form .cancel_button').length>0){
+            $('#display_update_form .cancel_button').click();
+            $('#display_update_form').empty();
+        }
         let id = $(this).data('id'); // order ID
         let controller = $(this).data('control'); // controller name from PHP
         console.log("Controller:", controller); // Debugging line
@@ -40,6 +44,10 @@ $(document).ready(function () {
                 $('#returnModalContent').html('<p class="text-danger">Failed to load content.</p>');
             }
         });
+    });
+
+    $('#returnModal').on('hidden.bs.modal', function () {
+        $('#returnModalContent').empty();
     });
 
 

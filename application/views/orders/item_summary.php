@@ -57,8 +57,7 @@
                         <thead>
                             <tr>
                                 <th>Item Name</th>
-                                <th>Qty PKT</th>
-                                <th>Qty KG</th>
+                                <th>Qty KG/PCS</th>
                                 <th>Total Amount (₹)</th>
                             </tr>
                         </thead>
@@ -67,7 +66,6 @@
                                 <?php foreach ($summary as $row): ?>
                                     <tr class="<?= ($row->item_name == 'Total') ? 'total-row' : '' ?>">
                                         <td><?= $row->item_name ?></td>
-                                        <td><?= $row->qty_pkt ?></td>
                                         <td><?= $row->qty_kg ?></td>
                                         <td><?= number_format($row->totalamt, 2) ?></td>
                                     </tr>

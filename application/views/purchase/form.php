@@ -100,8 +100,8 @@ function addItemRow(existing = null) {
         const headerHtml = `
             <div class="row custom_form_row header_row font-weight-bold" style="margin-bottom: 5px;">
                 <div class="form-group col-md-4 cus_filds">Item</div>
-                <div class="form-group col-md-2 cus_filds">Qty (KG)</div>
-                <div class="form-group col-md-2 cus_filds">Price per KG</div>
+                <div class="form-group col-md-2 cus_filds">Qty (KG/PCS)</div>
+                <div class="form-group col-md-2 cus_filds">Price per KG/PCS</div>
                 <div class="form-group col-md-2 cus_filds">Total Pkts</div>
                 <div class="form-group col-md-2 cus_filds">Amount</div>
                 <div class="form-group col-md-2 cus_filds">Action</div>

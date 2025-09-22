@@ -123,7 +123,7 @@
                                 <th width="20%">Item Name</th>
                                 <!-- <th width="20%">Size</th> -->
                                 <!-- <th width="20%">Factor</th> -->
-                                <th width="20%"> Price Per KG</th>
+                                <th width="20%"> Price Per KG/PCS</th>
                                 <th width="20%" class="hidden-phone">Action</th>
                             </tr>
                         </thead>

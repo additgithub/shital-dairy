@@ -65,7 +65,7 @@
 <body>
 
 <div class="logo-container">
-    <img src="<?= base_url('assets/img/logo.jpeg') ?>" class="logo" alt="Company Logo">
+    <img src="<?= base_url('assets/img/logo.jpg') ?>" class="logo" alt="Company Logo">
 </div>
 <div class="header">
    
