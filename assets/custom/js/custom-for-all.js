@@ -20,9 +20,30 @@ $(document).on("click", ".remove_image", function (event) {
 });
 
 $(document).ready(function () {
+    // var cust_id = $('data-id').val();
+    $(document).on('change', '.customer_select', function () {
+        var cust_id = $(this).find(':selected').data('id');
+        $.ajax({
+            url: BASE_URL + "orders/get_customer_details/" + cust_id, // <-- make a controller method
+            type: "GET",
+            dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log(response.status,'response')
+                if (response.status === 'ok') {
+                    alert('31')
+                    $('.customer_contact_no').val(response.data.customer_mobile);
+                } else {
+                    $('.customer_contact_no').val('');
+                }
+            },
+        });
+    });
 
     $(document).on('click', '.open_return_popup', function () {
-        if($('#display_update_form .cancel_button').length>0){
+        if ($('#display_update_form .cancel_button').length > 0) {
             $('#display_update_form .cancel_button').click();
             $('#display_update_form').empty();
         }

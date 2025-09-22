@@ -30,7 +30,7 @@ $contact_no = array(
     'name' => 'contact_no',
     'id' => 'contact_no',
     'value' => $edit_mode ? $data_info->contact_no : set_value('contact_no'),
-    'class' => "form-control",
+    'class' => "form-control customer_contact_no",
     'required' => true
 );
 $remarks = array(
@@ -86,13 +86,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             </div>
             <div class="form-group col-md-4">
                 <label>Customer<span class="spn_required">*</span></label>
-                <select name="customer_name" class="form-control select2" required>
+                <select name="customer_name" class="form-control select2 customer_select" required>
                     <option value="">Select Customer</option>
                     <?php
                     if (isset($customers) && !empty($customers)) {
                         foreach ($customers as $customer) {
                             $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
-                            echo "<option value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                            echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
                         }
                     }
                     ?>

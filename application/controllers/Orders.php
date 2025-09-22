@@ -33,6 +33,21 @@ class Orders extends CI_Controller
         $this->load->view('main_content', $data);
     }
 
+    function get_customer_details($id){
+        $customer = $this->Common->get_info($id, TBL_CUSTOMER, 'customer_id');
+
+        if($customer){
+            $response = array("status" => "ok", "data" => $customer);
+            echo json_encode($response);
+            // echo json_encode($response);
+            // exit;
+        }else{
+             $response = array("status" => "error", "data" => []);
+            echo json_encode($response);
+        }
+        exit;
+    }
+
     function add()
     {
         $data['page_title'] = "Add New " . $this->title;
