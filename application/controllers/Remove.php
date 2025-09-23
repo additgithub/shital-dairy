@@ -640,6 +640,37 @@ class Remove extends CI_Controller {
 
         endif;
     }
+     function orders($pid = 0, $where = 'order_hdr_id') {
+        $id = ($pid > 0) ? $pid : (($this->input->post('id')) ? $this->input->post('id') : 0);
+        if ($id > 0):
+            
+            $data_remove = $this->Remove_records->remove_data($id, $where, TBL_ORDER_HDR);
+
+            if ($pid > 0):
+                return ($data_remove) ? TRUE : FALSE;
+            else:
+                $response = ($data_remove) ? array('status' => 'ok', 'message' => 'Details removed successfully.!') : array('status' => 'ok', 'message' => 'Details not removed successfully.!');
+                $this->response($response);
+            endif;
+
+        endif;
+    }
+     function wadi($pid = 0, $where = 'wadi_id') {
+        $id = ($pid > 0) ? $pid : (($this->input->post('id')) ? $this->input->post('id') : 0);
+        if ($id > 0):
+
+            $data_remove = $this->Remove_records->remove_data($id, $where, TBL_WADI);
+
+            if ($pid > 0):
+                return ($data_remove) ? TRUE : FALSE;
+            else:
+                $response = ($data_remove) ? array('status' => 'ok', 'message' => 'Details removed successfully.!') : array('status' => 'ok', 'message' => 'Details not removed successfully.!');
+                $this->response($response);
+            endif;
+
+        endif;
+    }
+
 
     function response($response) {
         echo json_encode($response);

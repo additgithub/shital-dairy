@@ -14,4 +14,6 @@ define("TBL_PURCHASE_DTL", "tbl_purchase_dtl");
 define("TBL_CUSTOMER", "tbl_customer");
 define("TBL_EXPENSES", "tbl_expense");
 define("TBL_RETURN_QTY", "tbl_return_qty");
+define("TBL_INVOICE", "tbl_invoice");
+define("TBL_WADI", "tbl_wadi");
 ?>

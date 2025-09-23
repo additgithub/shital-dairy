@@ -7,8 +7,8 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
     define("USERNAME", "root");
     define("PASSWORD", "");
     define("DATABASE", "sheetal_dairy");
-    $BASE_URL = 'http://' . $_SERVER['HTTP_HOST'] . '/shital-dairy/';
-    define("DOCUMENT_ROOT", $_SERVER['DOCUMENT_ROOT'] . '/shital-dairy/');
+    $BASE_URL = 'http://' . $_SERVER['HTTP_HOST'] . '/AIPL/shital-dairy/';
+    define("DOCUMENT_ROOT", $_SERVER['DOCUMENT_ROOT'] . '/AIPL/shital-dairy/');
 } 
 // else if ($_SERVER['HTTP_HOST'] == 'live.com') {
 //     //Live Server

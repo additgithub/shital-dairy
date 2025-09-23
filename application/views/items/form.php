@@ -4,6 +4,7 @@ $DataID = $this->PrimaryKey;
 $item_name = array('name' => 'item_name', 'id' => 'item_name', 'value' => (isset($data_info) && $data_info->item_name != "") ? $data_info->item_name : set_value('item_name'), 'class' => "form-control",);
 $item_code = array('name' => 'item_code', 'id' => 'item_code', 'value' => (isset($data_info) && $data_info->item_code != "") ? $data_info->item_code : set_value('item_code'), 'class' => "form-control",);
 $selling_price = array('name' => 'selling_price', 'id' => 'selling_price', 'value' => (isset($data_info) && $data_info->selling_price != "") ? $data_info->selling_price : set_value('selling_price'), 'class' => "form-control",);
+$hsn_code = array('name' => 'hsn_code', 'id' => 'hsn_code', 'value' => (isset($data_info) && $data_info->hsn_code != "") ? $data_info->hsn_code : set_value('hsn_code'), 'class' => "form-control",);
 // $size = array('name' => 'size', 'id' => 'size', 'value' => (isset($data_info) && $data_info->size != "") ? $data_info->size : set_value('size'), 'class' => "form-control",);
 
 // $factor = array('name' => 'factor', 'id' => 'factor', 'value' => (isset($data_info) && $data_info->factor != "") ? $data_info->factor : set_value('factor'), 'class' => "form-control",);
@@ -53,6 +54,15 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
 
                                 <?php
                                 echo form_input($item_code);
+                                ?>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="form-label">HSN Code<span class="spn_required">*</span></label>
+                            <div class="input-with-icon  right">
+
+                                <?php
+                                echo form_input($hsn_code);
                                 ?>
                             </div>
                         </div>

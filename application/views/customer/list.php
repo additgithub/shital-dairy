@@ -121,9 +121,11 @@
                         <thead>
                             <tr>
                                 <th width="20%">Customer Name</th>
+                                <th width="20%">Owner Name</th>
                                 <th width="20%">Customer Email</th>
                                 <th width="20%">Customer Mobile</th>
                                 <th width="20%">Customer WhatsApp</th>
+                                <th width="20%">GST Number</th>
                                 <th width="20%" class="hidden-phone">Action</th>
                             </tr>
                         </thead>

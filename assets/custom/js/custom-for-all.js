@@ -33,8 +33,8 @@ $(document).ready(function () {
             success: function (response) {
                 console.log(response.status,'response')
                 if (response.status === 'ok') {
-                    alert('31')
                     $('.customer_contact_no').val(response.data.customer_mobile);
+                    $('.customer_gst_number').val(response.data.GST);
                 } else {
                     $('.customer_contact_no').val('');
                 }

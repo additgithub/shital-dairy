@@ -6,6 +6,8 @@ $customer_email = array('name' => 'customer_email', 'id' => 'customer_email', 'v
 $customer_mobile = array('name' => 'customer_mobile', 'id' => 'customer_mobile', 'value' => (isset($data_info) && $data_info->customer_mobile != "") ? $data_info->customer_mobile : set_value('customer_mobile'), 'class' => "form-control",);
 $customer_whatsapp_number = array('name' => 'customer_whatsapp_number', 'id' => 'customer_whatsapp_number', 'value' => (isset($data_info) && $data_info->customer_whatsapp_number != "") ? $data_info->customer_whatsapp_number : set_value('customer_whatsapp_number'), 'class' => "form-control",);
 $address = array('name' => 'address', 'id' => 'address', 'value' => (isset($data_info) && $data_info->address != "") ? $data_info->address : set_value('address'), 'class' => "form-control",);
+$GST = array('name' => 'GST', 'id' => 'GST', 'value' => (isset($data_info) && $data_info->GST != "") ? $data_info->GST : set_value('GST'), 'class' => "form-control",);
+$OwnerName = array('name' => 'OwnerName', 'id' => 'OwnerName', 'value' => (isset($data_info) && $data_info->OwnerName != "") ? $data_info->OwnerName : set_value('OwnerName'), 'class' => "form-control",);
 
 
 if (isset($data_info) && $data_info->$DataID > 0) {
@@ -57,6 +59,15 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div>
                         <div class="form-group col-md-4">
+                            <label class="form-label">Owner Name<span class="spn_required">*</span></label>
+                            <div class="input-with-icon  right">
+
+                                <?php
+                                echo form_input($OwnerName);
+                                ?>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
                             <label class="form-label">Customer Email</label>
                             <div class="input-with-icon  right">
 
@@ -80,6 +91,15 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
 
                                 <?php
                                 echo form_input($customer_whatsapp_number);
+                                ?>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="form-label">GST Number<span class="spn_required">*</span></label>
+                            <div class="input-with-icon  right">
+
+                                <?php
+                                echo form_input($GST);
                                 ?>
                             </div>
                         </div>

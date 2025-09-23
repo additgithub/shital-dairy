@@ -649,5 +649,16 @@ LEFT JOIN (
 
     return $this->db->query($sql)->result();
 }
+public function get_last_order_date($table, $primary_key,$order_date)
+    {
+        $this->db->select($order_date);
+        $this->db->order_by($primary_key, 'DESC');
+        $this->db->limit(1);
+        $query = $this->db->get($table);
+        if ($query->num_rows() > 0) {
+            return $query->row()->$order_date;
+        }
+        return 0;
+    }
 
 }

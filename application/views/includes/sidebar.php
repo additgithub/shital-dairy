@@ -51,6 +51,12 @@
                         <span class="title">Customer</span>
                     </a>
                 </li>
+                <li class="start <?php echo ($this->uri->segment(1) == "wadi") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('wadi'); ?>">
+                        <i class="fa fa-user"></i>
+                        <span class="title">Wadi</span>
+                    </a>
+                </li>
                 <!-- <li class="start <?php echo ($this->uri->segment(1) == "purchase" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('purchase'); ?>">
                         <i class="fa fa-user"></i>

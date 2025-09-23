@@ -68,6 +68,8 @@ class Customer extends CI_Controller {
                 $id = ($this->input->post($this->PrimaryKey) && $this->input->post($this->PrimaryKey) > 0) ? $this->input->post($this->PrimaryKey) : 0;
 
                 $post_data = array(
+                    "OwnerName" => $this->input->post('OwnerName'),
+                    "GST" => $this->input->post('GST'),
                     "customer_name" => $this->input->post('customer_name'),
                     "customer_email" => $this->input->post('customer_email') ?? '',
                     "customer_mobile" => $this->input->post('customer_mobile'),
@@ -107,7 +109,7 @@ class Customer extends CI_Controller {
 
     function manage() {
 
-        $this->datatables->select($this->PrimaryKey . ', customer_name,customer_email,customer_mobile,customer_whatsapp_number')
+        $this->datatables->select($this->PrimaryKey . ', customer_name,OwnerName,customer_email,customer_mobile,customer_whatsapp_number,GST')
                 ->from($this->table_name)
                 ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
         $this->datatables->unset_column($this->PrimaryKey);

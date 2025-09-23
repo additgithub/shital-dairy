@@ -1,3 +1,6 @@
+<style>
+   
+</style>
 <?php
 $DataID = $this->PrimaryKey;
 $edit_mode = isset($data_info) && isset($data_info->$DataID) && $data_info->$DataID > 0;
@@ -15,7 +18,7 @@ $order_date = array(
     'name' => 'order_date',
     'id' => 'order_date',
     'type' => 'date',
-    'value' => $edit_mode ? $data_info->order_date : (set_value('order_date') ?: date('Y-m-d')),
+    'value' => $edit_mode ? $data_info->order_date : (set_value('order_date') ?: $last_order_date),
     'class' => "form-control",
     'required' => true
 );
@@ -31,7 +34,8 @@ $contact_no = array(
     'id' => 'contact_no',
     'value' => $edit_mode ? $data_info->contact_no : set_value('contact_no'),
     'class' => "form-control customer_contact_no",
-    'required' => true
+    'required' => true,
+    'readonly' => 'readonly'
 );
 $remarks = array(
     'name' => 'remarks',
@@ -102,15 +106,34 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                 <label>Contact No<span class="spn_required">*</span></label>
                 <?= form_input($contact_no); ?>
             </div>
+            <div class="form-group col-md-4">
+                <label>GST Number<span class="spn_required">*</span></label>
+                <input type="text" name="gst_number" id="gst_number" class="form-control customer_gst_number" value="<?= $edit_mode ? $data_info->GST : '' ?>" readonly>
+            </div>
         </div>
         <div class="row">
             <div class="form-group col-md-4">
                 <label>Delivery Time<span class="spn_required">*</span></label>
                 <select name="delivery_time" id="delivery_time" class="form-control select2" required>
                     <option value="">Select Delivery Time</option>
+                    <option value="N/A" <?= $edit_mode && $data_info->delivery_time == 'N/A' ? 'selected' : 'selected' ?>>N/A</option>
                     <option value="Morning" <?= $edit_mode && $data_info->delivery_time == 'Morning' ? 'selected' : '' ?>>Morning</option>
                     <option value="Evening" <?= $edit_mode && $data_info->delivery_time == 'Evening' ? 'selected' : '' ?>>Evening</option>
 
+                </select>
+            </div>
+             <div class="form-group col-md-4">
+                <label>Wadi<span class="spn_required">*</span></label>
+                <select name="wadi_id" class="form-control select2 customer_select" required>
+                    <option value="">Select Wadi</option>
+                    <?php
+                    if (isset($wadis) && !empty($wadis)) {
+                        foreach ($wadis as $wadi) {
+                            $selected = ($edit_mode && $data_info->wadi_id == $wadi->wadi_id) ? 'selected' : '';
+                            echo "<option data-id=\"{$wadi->wadi_id}\" value=\"{$wadi->wadi_id}\" {$selected}>{$wadi->wadi_name}</option>";
+                        }
+                    }
+                    ?>
                 </select>
             </div>
         </div>
@@ -148,6 +171,10 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         </div>
 
         <div class="form-actions pull-right">
+                <div class="input-with-icon  right">
+                    <label>Is Bill?</label>
+                    <input type="checkbox" class="form-check-input" id="is_bill" name="is_bill" value="1" <?php echo (isset($data_info) && $data_info->is_bill == 1) ? 'checked' : ''; ?>>
+                </div>
             <?= form_submit($submit_btn); ?>
             <a class="btn btn-white cancel_button" href="javascript:;">Cancel</a>
         </div>
@@ -162,8 +189,11 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
     console.log('Items:', items);
 
     function addItemRow(existing = null) {
+        console.log(existing,'existing')
         const item_id = existing ? existing.item_id : '';
         const qty = existing ? existing.qty : 1;
+        const return_qty = existing ? existing.return_qty : 0;
+        const price_per_item = existing ? existing.price_per_item : '';
         const available_pkt = existing ? (existing.total_purchase_qty_pkt - existing.total_sells_qty_pkt) : 0;
         console.log('Available PKT:', available_pkt);
         const amount = existing ? parseFloat(existing.amount).toFixed(2) : '0.00';
@@ -178,18 +208,22 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                         const availableLalAttr = it.reorder == 0 ? `data-availableLbl="${it.total_purchase_qty_pkt - it.total_sells_qty_pkt}"` : '';
                     availableAttr2 = it.total_purchase_qty_pkt - it.total_sells_qty_pkt
                     return `<option value="${it.item_id}" data-price="${it.selling_price}" ${availableAttr} ${availableLalAttr} data-reorder="${it.reorder}" ${it.item_id == item_id ? 'selected' : ''}>
-                        ${it.item_name}
+                        ${it.item_name} ${it.selling_price}
                     </option>`;
                 }).join('')}
             </select>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Qty (KG/PCS)</label>
+            <label>Qty (KG)</label>
             <input type="number" name="item_qty[]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required>
         </div>
         <div class="form-group col-md-2 cus_filds">
-            <label>Price Per KG/PCS</label>
-            <input type="number" name="price_per_kg[]" class="form-control price_per_kg" min="1">
+            <label>Return Qty (KG)</label>
+            <input type="number" name="return_qty[]" class="form-control return_qty" min="0"  value="${return_qty}" data-price="0" oninput="updateRowPrice(this)" required>
+        </div>
+        <div class="form-group col-md-2 cus_filds">
+            <label>Price Per KG</label>
+            <input type="number" name="price_per_kg[]" class="form-control price_per_kg" value="${price_per_item}" min="1">
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Total Amount</label>
@@ -223,7 +257,6 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         // const price = parseFloat(select.find('option:selected').data('price')) || 0;
         const selectedPrice = parseFloat(select.find('option:selected').data('price')) || 0;
         let price = parseFloat(priceInput.val()) || 0;
-
         if (!price) {
             price = selectedPrice;
             priceInput.val(price.toFixed(2));
@@ -286,7 +319,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
 
     //$(document).on('click', '#addItemBtn', () => addItemRow());
     let addItemTimeout;
-    $(document).off('click', '#addItemBtn').on('click', '#addItemBtn', function () {
+    $(document).off('click', '#addItemBtn').on('click', '#addItemBtn', function() {
         let $btn = $(this);
         $btn.prop("disabled", true); // better than attr for buttons
 

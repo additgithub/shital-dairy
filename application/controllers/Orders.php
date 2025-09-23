@@ -3,7 +3,7 @@
 if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
-require 'vendor/autoload.php';
+// require 'vendor/autoload.php';
 
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
@@ -58,6 +58,7 @@ class Orders extends CI_Controller
             ->order_by("i.item_code", "ASC");
         $data['items'] = $this->db->get()->result();
         $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+        $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name,');
         // print_r($data['customers']);die;
         // print_r($data['items']);die;
         $date_part = date('Ymd');
@@ -65,21 +66,27 @@ class Orders extends CI_Controller
         $last_id = $this->Common->get_last_auto_id($this->table_name, $this->PrimaryKey); // e.g. 5
         $next_id = $last_id + 1;
         $generated_order_no = 'ORD' . $date_part . str_pad($next_id, 4, '0', STR_PAD_LEFT);
-
+        
+        $last_order_date = $this->Common->get_last_order_date($this->table_name, $this->PrimaryKey,'order_date'); // e.g. 5
         $data['generated_order_no'] = $generated_order_no;
+        $data['last_order_date'] = $last_order_date ? $last_order_date : date('d-m-Y');
         $this->load->view($this->view_name . '/form', $data);
     }
     function edit($id)
     {
         $data_found = 0;
         if ($id > 0) {
-            $data_obj = $this->Common->get_info($id, $this->table_name, $this->PrimaryKey);
+            $join = array(
+                array('table' => TBL_CUSTOMER . ' c', 'on' => 'c.customer_id = o.customer_name', 'type' => 'LEFT')
+            );
+            $data_obj = $this->Common->get_info($id, $this->table_name . ' o', $this->PrimaryKey,'','o.*,c.GST,c.customer_mobile',$join);
             if (is_object($data_obj) && count((array) $data_obj) > 0) {
                 $data["data_info"] = $data_obj;
-
+                 $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name,');
                 // ✅ get related order items
-                $data["order_items"] = $this->Common->get_all_info('', TBL_ORDER_DTL, 'order_hdr_id', "order_hdr_id = $id");
-
+                $data["order_items"] = $this->Common->get_all_info(1, TBL_ORDER_DTL, 1, "order_hdr_id = $id");
+                // echo $this->db->last_query();die;
+                // print_r($data["order_items"]);die;
                 // ✅ get items for dropdown
                 $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id','','*,(CONCAT(item_code," - ",item_name)) as item_name',false,false,false,array('field' => 'item_code','order' => 'ASC'));
                 $data_found = 1;
@@ -89,7 +96,7 @@ class Orders extends CI_Controller
         if ($data_found == 0) {
             redirect('/');
         }
-
+        // print_r($data);die;
         $data['page_title'] = "Edit " . $this->title;
         $this->load->view($this->view_name . '/form', $data);
     }
@@ -108,31 +115,32 @@ class Orders extends CI_Controller
                 ->set_rules('contact_no', 'Contact No', 'required')
                 ->set_rules('delivery_time', 'Delivery Time', 'required')
                 ->set_rules('item_id[]', 'Item', 'required')
+                ->set_rules('price_per_kg[]', 'Price', 'required')
                 ->set_rules('item_qty[]', 'Qty', 'required');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
 
             if ($this->form_validation->run()) {
                 $id = ($this->input->post($this->PrimaryKey)) ? $this->input->post($this->PrimaryKey) : 0;
-                foreach ($this->input->post('item_id') as $index => $item_id) {
-                    $qty = $this->input->post('item_qty')[$index];
-                    $item = $this->db->select('i.item_name, s.total_purchase_qty_pkt, s.total_sells_qty_pkt,i.reorder')
-                        ->from('tbl_item i')
-                        ->join('tbl_item_stock s', 'i.item_id = s.item_id')
-                        ->where('i.item_id', $item_id)
-                        ->get()->row();
-                    $available = $item->total_purchase_qty_pkt - $item->total_sells_qty_pkt;
+                // foreach ($this->input->post('item_id') as $index => $item_id) {
+                //     $qty = $this->input->post('item_qty')[$index];
+                //     $item = $this->db->select('i.item_name, s.total_purchase_qty_pkt, s.total_sells_qty_pkt,i.reorder')
+                //         ->from('tbl_item i')
+                //         ->join('tbl_item_stock s', 'i.item_id = s.item_id')
+                //         ->where('i.item_id', $item_id)
+                //         ->get()->row();
+                //     $available = $item->total_purchase_qty_pkt - $item->total_sells_qty_pkt;
 
-                    if ($item && $qty > $available && $item->reorder == 0) {
-                        if ($available == 0) {
-                            $error_msg = $item->item_name . ' is out of stock.';
-                        } else {
-                            $error_msg = $item->item_name . ' has only ' . $available . ' pkt available.';
-                        }
-                        $response['message'] = $error_msg;
-                        echo json_encode($response);
-                        exit;
-                    }
-                }
+                //     if ($item && $qty > $available && $item->reorder == 0) {
+                //         if ($available == 0) {
+                //             $error_msg = $item->item_name . ' is out of stock.';
+                //         } else {
+                //             $error_msg = $item->item_name . ' has only ' . $available . ' pkt available.';
+                //         }
+                //         $response['message'] = $error_msg;
+                //         echo json_encode($response);
+                //         exit;
+                //     }
+                // }
                 $post_data = array(
                     'order_date'     => $this->input->post('order_date'),
                     'customer_name'  => $this->input->post('customer_name'),
@@ -143,6 +151,7 @@ class Orders extends CI_Controller
                     'other_charges'         => $this->input->post('other_charges'),
                     'delivery_time'         => $this->input->post('delivery_time'),
                     'remarks'        => $this->input->post('remarks'),
+                    'wadi_id'        => ($this->input->post('wadi_id')) ? $this->input->post('wadi_id') : 0,
                 );
 
                 if ($id > 0) {
@@ -154,17 +163,20 @@ class Orders extends CI_Controller
                         $this->Common->delete_info('tbl_order_dtl', 'order_hdr_id', $id);
                         // _insert_order_items($id);
                         $items = []; // Build this from POSTed form data
-                        foreach ($this->input->post('item_id') as $index => $item_id) {
-                            $items[] = [
+                         foreach ($this->input->post('item_id') as $index => $item_id) {
+                            $detail_data = array(
+                                'order_hdr_id' => $id,
                                 'item_id' => $item_id,
                                 'qty' => $this->input->post('item_qty')[$index],
+                                'return_qty' => $this->input->post('return_qty')[$index],
                                 'price_per_item' => $this->input->post('price_per_kg')[$index],
-                                'amount' => $this->input->post('item_total')[$index],
-                                'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
-                            ];
+                                'amount' => $this->input->post('item_total')[$index]
+                            );
+                            
+                            $this->Common->add_info(TBL_ORDER_DTL, $detail_data);
                         }
 
-                        order_item($id, $items);
+                        // order_item($id, $items);
                         $response = array("status" => "ok", "heading" => "Updated", "message" => "Order updated successfully.");
                     } else {
                         $response = array("status" => "error", "heading" => "Failed", "message" => "Order not updated.");
@@ -184,21 +196,25 @@ class Orders extends CI_Controller
                     $temp_id = $this->Common->add_info($this->table_name, $post_data);
 
                     if ($temp_id > 0) {
-                        $date_part = date('Ymd');
+                        // $date_part = date('Ymd');
+                        $date_part = $this->input->post('order_date') ? date('Ymd', strtotime($this->input->post('order_date'))) : date('Ymd');
                         $order_no = 'ORD' . $date_part . str_pad($temp_id, 4, '0', STR_PAD_LEFT);
                         $this->Common->update_info($temp_id, $this->table_name, array('order_no' => $order_no), $this->PrimaryKey);
                         $items = []; // Build this from POSTed form data
                         foreach ($this->input->post('item_id') as $index => $item_id) {
-                            $items[] = [
+                            $detail_data = array(
+                                'order_hdr_id' => $temp_id,
                                 'item_id' => $item_id,
                                 'qty' => $this->input->post('item_qty')[$index],
+                                'return_qty' => $this->input->post('return_qty')[$index],
                                 'price_per_item' => $this->input->post('price_per_kg')[$index],
-                                'amount' => $this->input->post('item_total')[$index],
-                                'item_name' => $this->input->post('item_name')[$index] ?? '' // only for error message
-                            ];
+                                'amount' => $this->input->post('item_total')[$index]
+                            );
+                            // print_r($detail_data);die;
+                            $this->Common->add_info(TBL_ORDER_DTL, $detail_data);
                         }
 
-                        order_item($temp_id, $items);
+                        // order_item($temp_id, $items);
                         // _insert_order_items($temp_id);
                         $response = array("status" => "ok", "heading" => "Added", "message" => "Order added successfully.");
                     } else {
@@ -240,7 +256,7 @@ class Orders extends CI_Controller
         $invoice_url = base_url("orders/invoice_pdf/" . $id);
         $action = <<<EOF
             <div class="tooltip-top">
-                <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_return_popup" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-pencil"></i></a>
+                <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-pencil"></i></a>
                 <a data-original-title="Download Invoice" data-placement="top" data-toggle="tooltip" href="{$invoice_url}"  class="btn btn-default btn-equal btn-mini" target="_blank"><i class="fa fa-download"></i></a>
                 <a data-original-title="Remove {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal delete_btn btn-mini" data-id="{$id}" data-method="{$this->controllers}"><i class="fa fa-trash-o"></i></a>
             </div>

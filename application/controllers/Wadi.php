@@ -3,13 +3,13 @@
 if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
-class Items extends CI_Controller {
+class Wadi extends CI_Controller {
 
-    public $table_name = TBL_M_ITEMS;
-    public $controllers = 'items';
-    public $view_name = 'items';
-    public $title = 'Items';
-    public $PrimaryKey = 'item_id';
+    public $table_name = TBL_WADI;
+    public $controllers = 'wadi';
+    public $view_name = 'wadi';
+    public $title = 'Wadi';
+    public $PrimaryKey = 'wadi_id';
 
     function __construct() {
         parent::__construct();
@@ -56,12 +56,7 @@ class Items extends CI_Controller {
             $response = array("status" => "error", "heading" => "Unknown Error", "message" => "There was an unknown error that occurred. You will need to refresh the page to continue working.");
             $error_element = error_elements();
             $this->form_validation
-                    ->set_rules('item_name', 'Item Name', 'required')
-                    ->set_rules('item_code', 'Item Code', 'required')
-                    ->set_rules('hsn_code', 'HSN Code', 'required')
-                    // ->set_rules('size', 'Item Size', 'required')
-                    // ->set_rules('factor', 'Factor', 'required')
-                    ->set_rules('selling_price', 'Item Selling Price', 'required');
+                    ->set_rules('wadi_name', 'Wadi Name', 'required');
             $this->form_validation->set_message('required', 'The %s field is required.');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
 
@@ -70,13 +65,7 @@ class Items extends CI_Controller {
                 $id = ($this->input->post($this->PrimaryKey) && $this->input->post($this->PrimaryKey) > 0) ? $this->input->post($this->PrimaryKey) : 0;
 
                 $post_data = array(
-                    "item_code" => $this->input->post('item_code'),
-                    "hsn_code" => $this->input->post('hsn_code'),
-                    "item_name" => $this->input->post('item_name'),
-                    // "size" => $this->input->post('size'),
-                    // "factor" => $this->input->post('factor'),
-                    "selling_price" => $this->input->post('selling_price'),
-                    // "reorder" => ($this->input->post('reorder') == 1) ? 1 : 0,
+                    "wadi_name" => $this->input->post('wadi_name'),
                 );
 
               
@@ -111,7 +100,7 @@ class Items extends CI_Controller {
 
     function manage() {
 
-        $this->datatables->select($this->PrimaryKey . ', item_code,hsn_code,item_name,selling_price')
+        $this->datatables->select($this->PrimaryKey . ', wadi_name')
                 ->from($this->table_name)
                 ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
         $this->datatables->unset_column($this->PrimaryKey);
