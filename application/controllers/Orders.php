@@ -58,7 +58,7 @@ class Orders extends CI_Controller
             ->order_by("i.item_code", "ASC");
         $data['items'] = $this->db->get()->result();
         $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
-        $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name,');
+        $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name',false,false,false,array('field' => 'wadi_name','order' => 'ASC'));
         // print_r($data['customers']);die;
         // print_r($data['items']);die;
         $date_part = date('Ymd');
@@ -67,7 +67,7 @@ class Orders extends CI_Controller
         $next_id = $last_id + 1;
         $generated_order_no = 'ORD' . $date_part . str_pad($next_id, 4, '0', STR_PAD_LEFT);
         
-        $last_order_date = $this->Common->get_last_order_date($this->table_name, $this->PrimaryKey,'order_date'); // e.g. 5
+        $last_order_date = $this->Common->get_last_order_date($this->table_name,'order_date'); // e.g. 5
         $data['generated_order_no'] = $generated_order_no;
         $data['last_order_date'] = $last_order_date ? $last_order_date : date('d-m-Y');
         $this->load->view($this->view_name . '/form', $data);
@@ -82,7 +82,7 @@ class Orders extends CI_Controller
             $data_obj = $this->Common->get_info($id, $this->table_name . ' o', $this->PrimaryKey,'','o.*,c.GST,c.customer_mobile',$join);
             if (is_object($data_obj) && count((array) $data_obj) > 0) {
                 $data["data_info"] = $data_obj;
-                 $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name,');
+                $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name',false,false,false,array('field' => 'wadi_name','order' => 'ASC'));
                 // ✅ get related order items
                 $data["order_items"] = $this->Common->get_all_info(1, TBL_ORDER_DTL, 1, "order_hdr_id = $id");
                 // echo $this->db->last_query();die;
@@ -158,7 +158,8 @@ class Orders extends CI_Controller
                     // Edit mode
                     $post_data['modified_on'] = date("Y-m-d H:i:s");
                     $post_data['modified_by'] = $this->tank_auth->get_user_id();
-
+                    $old_order = $this->Common->get_info($id, $this->table_name, $this->PrimaryKey);
+                    $old_amount = $old_order ? $old_order->amount : 0;
                     if ($this->Common->update_info($id, $this->table_name, $post_data, $this->PrimaryKey)) {
                         $this->Common->delete_info('tbl_order_dtl', 'order_hdr_id', $id);
                         // _insert_order_items($id);
@@ -175,6 +176,7 @@ class Orders extends CI_Controller
                             
                             $this->Common->add_info(TBL_ORDER_DTL, $detail_data);
                         }
+                        debit_ledger($this->input->post('customer_name'),$this->input->post('total_amount'),$id,$old_amount,'',$this->input->post('order_date'));
 
                         // order_item($id, $items);
                         $response = array("status" => "ok", "heading" => "Updated", "message" => "Order updated successfully.");
@@ -216,6 +218,8 @@ class Orders extends CI_Controller
 
                         // order_item($temp_id, $items);
                         // _insert_order_items($temp_id);
+
+                        debit_ledger($this->input->post('customer_name'),$this->input->post('total_amount'),$temp_id,0,$order_no,$this->input->post('order_date'));
                         $response = array("status" => "ok", "heading" => "Added", "message" => "Order added successfully.");
                     } else {
                         $response = array("status" => "error", "heading" => "Insert Failed", "message" => "Order not added.");

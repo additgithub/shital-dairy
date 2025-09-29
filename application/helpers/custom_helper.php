@@ -3259,11 +3259,11 @@ function order_item($order_id, $items)
     if (!isset($ci->Common)) {
         $ci->load->model('Common');
     }
-   
+
     foreach ($items as $item) {
         $item_id = $item['item_id'];
         $qty = $item['qty'];
-        
+
         $item_details = $ci->Common->get_info($item_id, 'tbl_item', 'item_id');
         $qty_kg = $item_details ? ($qty * $item_details->factor) : 0;
         // Get available stock in packet
@@ -3302,12 +3302,12 @@ function order_item($order_id, $items)
 function purchase_item($purchase_id, $items)
 {
     $ci = &get_instance();
-     // Make sure Common model is loaded
-        if (!isset($ci->Common)) {
-            $ci->load->model('Common');
-        }
+    // Make sure Common model is loaded
+    if (!isset($ci->Common)) {
+        $ci->load->model('Common');
+    }
     foreach ($items as $item) {
-       
+
         $item_id = $item['item_id'];
         $qty_kg = $item['qty_kg'];
         $item_mst = $ci->Common->get_info($item_id, 'tbl_item', 'item_id');
@@ -3458,4 +3458,119 @@ function order_delivered_row($id)
 EOF;
     }
     return $action;
+}
+
+function wadi_action_row($id)
+{
+    $ci = &get_instance();
+    if ($id != 1) {
+        $action = <<<EOF
+              <div class="tooltip-top">
+                <a data-original-title="Edit {$ci->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$ci->controllers}"><i class="fa fa-pencil"></i></a>
+                <a data-original-title="Remove {$ci->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal delete_btn btn-mini" data-id="{$id}" data-method="{$ci->controllers}"><i class="fa fa-trash-o"></i></a>
+            </div>
+        EOF;
+        return $action;
+    } else {
+        return '';
+    }
+}
+
+function debit_ledger($customer_id, $amount, $order_id, $old_amount = 0, $order_no, $order_date)
+{
+    $ci = &get_instance();
+    // Make sure Common model is loaded
+    if (!isset($ci->Common)) {
+        $ci->load->model('Common');
+    }
+    $customer_last_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', '', 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+    $balance = 0;
+    if (!empty($customer_last_entry)) {
+        $balance = $customer_last_entry->balance;
+    }
+    $balance = $balance - $amount;
+    $customer_balance = $ci->Common->get_info($customer_id, TBL_CUSTOMER, 'customer_id', '', 'balance');
+    $customer_balance_amount = 0;
+    if (!empty($customer_balance)) {
+        $customer_balance_amount = ($customer_balance->balance - $amount + $old_amount);
+    } else {
+        $customer_balance_amount = $amount;
+    }
+
+    $customer_order_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'order_id=' . $order_id, 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+
+
+    if (!empty($customer_order_entry)) {
+
+        $ci->Common->update_info($customer_id, TBL_CUSTOMER, array('balance' => $customer_balance_amount), 'customer_id');
+        $ci->Common->update_info($customer_id, TBL_LEDGER, array('debit' => $amount, 'txn_date' => $order_date), 'customer_id', 'order_id=' . $order_id);
+    } else {
+        $ci->Common->update_info($customer_id, TBL_CUSTOMER, array('balance' => $customer_balance_amount), 'customer_id');
+        $ci->Common->add_info(TBL_LEDGER, array(
+            'customer_id'      => $customer_id,
+            'txn_date'      => $order_date,
+            'order_id'      => $order_id,
+            'debit'          => $amount,
+            'credit'          => 0,
+            'balance'          => $balance,
+            'remark'          => $order_no,
+            'created_on'   => date("Y-m-d H:i:s"),
+            'created_by'  => $ci->tank_auth->get_user_id(),
+        ));
+    }
+}
+function credit_ledger($customer_id, $amount, $payment_id, $remark, $old_amount = 0, $payment_type, $payment_date)
+{
+    $ci = &get_instance();
+    // Make sure Common model is loaded
+    if (!isset($ci->Common)) {
+        $ci->load->model('Common');
+    }
+    $customer_last_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', '', 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+    $balance = 0;
+    if (!empty($customer_last_entry)) {
+        $balance = $customer_last_entry->balance;
+    }
+    $balance = $balance + $amount;
+    $customer_balance = $ci->Common->get_info($customer_id, TBL_CUSTOMER, 'customer_id', '', 'balance');
+    $customer_balance_amount = 0;
+    if (!empty($customer_balance)) {
+        $customer_balance_amount = ($customer_balance->balance + $amount - $old_amount);
+    } else {
+        $customer_balance_amount = $amount;
+    }
+    $ci->Common->update_info($customer_id, TBL_CUSTOMER, array('balance' => $customer_balance_amount), 'customer_id');
+    $customer_payment_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'payment_id=' . $payment_id, 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+
+
+    if (!empty($customer_payment_entry)) {
+
+        $ci->Common->update_info($customer_id, TBL_LEDGER, array('credit' => $amount), 'customer_id', 'payment_id=' . $payment_id);
+    } else {
+        $ci->Common->add_info(TBL_LEDGER, array(
+            'customer_id'      => $customer_id,
+            'txn_date'      => $payment_date,
+            'payment_id'      => $payment_id,
+            'debit'          => 0,
+            'credit'          => $amount,
+            'balance'          => $balance,
+            'remark'          => ($payment_type) ? $payment_type : '',
+            'created_on'   => date("Y-m-d H:i:s"),
+            'created_by'  => $ci->tank_auth->get_user_id(),
+        ));
+    }
+}
+
+function ledger_detail_action_row($id, $credit_value, $debit_value, $order_id, $payment_id)
+{
+    $ci = &get_instance();
+    $html = '<div class="tooltip-top">';
+    if ($credit_value > 0 && $payment_id != 0) {
+        $html .= ' <a data-original-title="View Payment" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_ledger_popup" data-id="' . $id . '" data-control="ledger" data-method="credit" data-type="payment" data-payment_id="' . $payment_id . '"><i class="fa fa-eye"></i></a>';
+    } else if ($debit_value > 0 && $order_id != 0) {
+        $html .= ' <a data-original-title="View Order" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs        btn-default btn-equal btn-mini open_ledger_popup" data-id="' . $id . '" data-control="ledger" data-method="debit" data-type="order"  data-order_id="' . $order_id . '"><i class="fa fa-eye"></i></a>';
+    }
+    $html .= '</div>';
+
+    return $html;
 }

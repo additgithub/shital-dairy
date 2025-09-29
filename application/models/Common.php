@@ -524,7 +524,7 @@ class Common extends CI_Model
         SELECT
             i.item_name AS item_name,
             SUM(d.qty) AS qty_pkt,
-            FORMAT(SUM(d.qty * i.factor), 3) AS qty_kg,
+            FORMAT(SUM(d.qty), 3) AS qty_kg,
             SUM(d.qty * i.selling_price) AS totalamt
         FROM
             tbl_order_dtl d
@@ -538,7 +538,7 @@ class Common extends CI_Model
         SELECT
             'Total' AS item_name,
             SUM(d.qty) AS qty_pkt,
-            FORMAT(SUM(d.qty * i.factor),3) AS qty_kg,
+            FORMAT(SUM(d.qty ),3) AS qty_kg,
             SUM(d.qty * i.selling_price) AS totalamt
         FROM
             tbl_order_dtl d
@@ -649,10 +649,10 @@ LEFT JOIN (
 
     return $this->db->query($sql)->result();
 }
-public function get_last_order_date($table, $primary_key,$order_date)
+public function get_last_order_date($table, $order_date)
     {
         $this->db->select($order_date);
-        $this->db->order_by($primary_key, 'DESC');
+        $this->db->order_by($order_date, 'DESC');
         $this->db->limit(1);
         $query = $this->db->get($table);
         if ($query->num_rows() > 0) {

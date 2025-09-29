@@ -2,47 +2,45 @@
     .form-group:focus-within input,
     .form-group:focus-within select,
     .form-group:focus-within textarea,
-    .form-group:focus-within button,.btn-sm:focus {
+    .form-group:focus-within button,
+    .btn-sm:focus {
         border: 3px solid #1d5e75ff;
     }
-    
-    .select2-container-active .select2-choice{
+
+    .select2-container-active .select2-choice {
         border: 3px solid #1d5e75ff !important;
 
     }
+
     .form-actions {
         display: flex;
         align-items: center;
-        gap: 10px; /* spacing between checkbox, submit and cancel */
+        gap: 10px;
+        /* spacing between checkbox, submit and cancel */
     }
-    .me-3{
+
+    .me-3 {
         display: inline-flex !important;
     }
-    .me-3 input{
-        margin-right:12px !important;
+
+    .me-3 input {
+        margin-right: 12px !important;
     }
-    .me-3 .form-check-label{
-        font-size:15px;
+
+    .me-3 .form-check-label {
+        font-size: 15px;
     }
 </style>
 <?php
 $DataID = $this->PrimaryKey;
 $edit_mode = isset($data_info) && isset($data_info->$DataID) && $data_info->$DataID > 0;
 $order_id = $edit_mode ? $data_info->$DataID : '';
-$order_no = array(
-    'name'  => 'order_no',
-    'id'    => 'order_no',
-    'value' => isset($data_info) ? $data_info->order_no : $generated_order_no,  // <- passed from controller
-    'class' => 'form-control',
-    'readonly' => 'readonly',
-    'type' => 'hidden'
-);
 
-$order_date = array(
-    'name' => 'order_date',
-    'id' => 'order_date',
+$date = array(
+    'name' => 'date',
+    'id' => 'date',
     'type' => 'date',
-    'value' => $edit_mode ? $data_info->order_date : (set_value('order_date') ?: $last_order_date),
+    'value' => $edit_mode ? $data_info->date : (set_value('date') ?: ''),
     'class' => "form-control",
     'required' => true
 );
@@ -87,128 +85,76 @@ $other_charges = array(
 );
 $total_amount = $edit_mode ? $data_info->amount : 0;
 
-$form_attr = array('class' => 'default_form', 'id' => 'order_frm', 'autocomplete' => "off");
+$form_attr = array('class' => 'default_form', 'id' => 'bid_edit_frm', 'autocomplete' => "off");
 $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Submit', 'class' => 'btn btn-success btn-cons');
 ?>
 
-<div class="page-title">
-    <h3><?= $page_title ?></h3>
-</div>
+<div class="content">
 
-<div class="grid simple">
-    <div class="grid-title no-border">
-        <h4>Order Information</h4>
-    </div>
-    <div class="grid-body no-border">
-        <?= form_open_multipart(base_url($this->controllers . '/submit-form'), $form_attr); ?>
-        <?php if ($edit_mode) echo form_hidden($DataID, $order_id); ?>
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="grid simple ">
+                <?php
+                $this->load->view("includes/messages");
+                ?>
+                <div class="grid-title">
+                    <h4><?php echo $page_title; ?></h4>
+                </div>
 
-        <div class="row">
-            <!-- <div class="form-group col-md-4">
-                <label>Order No</label> -->
-            <?= form_input($order_no); ?>
-            <!-- </div> -->
-            <div class="form-group col-md-4">
-                <label>Order Date<span class="spn_required">*</span></label>
-                <?= form_input($order_date); ?>
-            </div>
-            <div class="form-group col-md-4">
-                <label>Customer<span class="spn_required">*</span></label>
-                <select name="customer_name" class="form-control select2 customer_select" required>
-                    <option value="">Select Customer</option>
-                    <?php
-                    if (isset($customers) && !empty($customers)) {
-                        foreach ($customers as $customer) {
-                            $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
-                            echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
-                        }
-                    }
-                    ?>
-                </select>
-            </div>
-            <div class="form-group col-md-4">
-                <label>Contact No<span class="spn_required">*</span></label>
-                <?= form_input($contact_no); ?>
-            </div>
-            <!-- <div class="form-group col-md-4">
-                <label>GST Number<span class="spn_required">*</span></label>
-                <input type="text" name="gst_number" id="gst_number" class="form-control customer_gst_number" value="<?= $edit_mode ? $data_info->GST : '' ?>" readonly>
-            </div> -->
-        </div>
-        <div class="row">
-            <div class="form-group col-md-4">
-                <label>Delivery Time<span class="spn_required">*</span></label>
-                <select name="delivery_time" id="delivery_time" class="form-control select2" required>
-                    <option value="">Select Delivery Time</option>
-                    <option value="N/A" <?= $edit_mode && $data_info->delivery_time == 'N/A' ? 'selected' : 'selected' ?>>N/A</option>
-                    <option value="Morning" <?= $edit_mode && $data_info->delivery_time == 'Morning' ? 'selected' : '' ?>>Morning</option>
-                    <option value="Evening" <?= $edit_mode && $data_info->delivery_time == 'Evening' ? 'selected' : '' ?>>Evening</option>
+                <div class="grid-body no-border">
+                    <?= form_open_multipart(base_url($this->controllers . '/submit-form'), $form_attr); ?>
+                    <?php if ($edit_mode) echo form_hidden($DataID, $order_id); ?>
 
-                </select>
-            </div>
-             <div class="form-group col-md-4">
-                <label>Wadi<span class="spn_required">*</span></label>
-                <select name="wadi_id" class="form-control select2 customer_select" required>
-                    <option value="">Select Wadi</option>
-                    <?php
-                    if (isset($wadis) && !empty($wadis)) {
-                        foreach ($wadis as $wadi) {
-                            $selected = ($edit_mode && $data_info->wadi_id == $wadi->wadi_id) ? 'selected' : '';
-                            if(!$edit_mode && $wadi->wadi_id == 1){
-                                $selected = 'selected';
-                            }
-                            echo "<option data-id=\"{$wadi->wadi_id}\" value=\"{$wadi->wadi_id}\" {$selected}>{$wadi->wadi_name}</option>";
-                        }
-                    }
-                    ?>
-                </select>
+                    <div class="row">
+                        <!-- <div class="form-group col-md-4">
+                                    <label>Order No</label> -->
+                        <!-- </div> -->
+                        <div class="form-group col-md-4">
+                            <label>Customer<span class="spn_required">*</span></label>
+                            <select name="customer_name" class="form-control select2 customer_select" required>
+                                <option value="">Select Customer</option>
+                                <?php
+                                if (isset($customers) && !empty($customers)) {
+                                    foreach ($customers as $customer) {
+                                        $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
+                                        echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Date<span class="spn_required">*</span></label>
+                            <?= form_input($date); ?>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Type<span class="spn_required">*</span></label>
+                            <select name="type" class="form-control select2 customer_select" required>
+                                <option value="">Select Type</option>
+                                <option value="credit">Credit</option>
+                                <option value="debit">Debit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            <label>Total Amount</label>
+                            <input type="text" name="total_amount" id="total_amount" class="form-control" value="<?= $total_amount ?>">
+                        </div>
+                    </div>
+
+
+
+                    <div class="form-actions pull-right d-flex align-items-center">
+
+                        <?= form_submit($submit_btn); ?>
+                        <a class="btn btn-white cancel_button ms-2" href="javascript:;">Cancel</a>
+                    </div>
+
+                    <?= form_close(); ?>
+                </div>
             </div>
         </div>
-
-        <hr>
-        <h4>Order Items</h4>
-        <div id="items_container"></div>
-        <button type="button" class="btn btn-primary btn-sm" id="addItemBtn">+ Add Item</button>
-
-        <hr>
-        <div class="row">
-            <div class="form-group col-md-3">
-                <label>Delivery Charges</label>
-                <!-- <input type="text" name="delivery_charges" id="delivery_charges" class="form-control" value="<?= $delivery_charges ?>" readonly> -->
-                <?= form_input($delivery_charges); ?>
-            </div>
-            <div class="form-group col-md-3">
-                <label>Dry Ice Box Charges Amount</label>
-                <!-- <input type="text" name="dry_ice_box_charges" id="dry_ice_box_charges" class="form-control" value="<?= $dry_ice_box_charges ?>" readonly> -->
-                <?= form_input($dry_ice_box_charges); ?>
-            </div>
-            <div class="form-group col-md-3">
-                <label>Other Charges</label>
-                <!-- <input type="text" name="other_charges" id="other_charges" class="form-control" value="<?= $other_charges ?>" readonly> -->
-                <?= form_input($other_charges); ?>
-            </div>
-            <div class="form-group col-md-3">
-                <label>Total Amount</label>
-                <input type="text" name="total_amount" id="total_amount" class="form-control" value="<?= $total_amount ?>" readonly>
-            </div>
-            <div class="form-group col-md-8">
-                <label>Remarks</label>
-                <?= form_textarea($remarks); ?>
-            </div>
-        </div>
-
-      <div class="form-actions pull-right d-flex align-items-center">
-            <div class="form-check me-3">
-                <input type="checkbox" class="form-check-input" id="is_bill" name="is_bill" value="1"
-                    <?php echo (isset($data_info) && $data_info->is_bill == 1) ? 'checked' : ''; ?>>
-                <label class="form-check-label" for="is_bill">Is Bill?</label>
-            </div>
-
-            <?= form_submit($submit_btn); ?>
-            <a class="btn btn-white cancel_button ms-2" href="javascript:;">Cancel</a>
-        </div>
-
-        <?= form_close(); ?>
     </div>
 </div>
 
@@ -219,7 +165,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
     console.log('Items:', items);
 
     function addItemRow_old(existing = null) {
-        console.log(existing,'existing')
+        console.log(existing, 'existing')
         const item_id = existing ? existing.item_id : '';
         const qty = existing ? existing.qty : 1;
         const return_qty = existing ? existing.return_qty : 0;
@@ -268,8 +214,9 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         $("#items_container select.select2").select2();
         itemIndex++;
         calculateTotal();
-        
+
     }
+
     function addItemRow(existing = null) {
         console.log(existing, 'existing');
         const item_id = existing ? existing.item_id : '';
@@ -420,7 +367,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         clearTimeout(addItemTimeout);
         addItemTimeout = setTimeout(() => {
             // addItemRow();
-             let $newRow = addItemRow();
+            let $newRow = addItemRow();
 
             // Focus first input or select2 in new row
             let $firstField = $newRow.find("input, select, textarea").first();

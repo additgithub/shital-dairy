@@ -59,7 +59,7 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div>
                         <div class="form-group col-md-4">
-                            <label class="form-label">Owner Name<span class="spn_required">*</span></label>
+                            <label class="form-label">Owner Name</label>
                             <div class="input-with-icon  right">
 
                                 <?php
@@ -95,7 +95,7 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div>
                         <div class="form-group col-md-4">
-                            <label class="form-label">GST Number<span class="spn_required">*</span></label>
+                            <label class="form-label">GST Number</label>
                             <div class="input-with-icon  right">
 
                                 <?php

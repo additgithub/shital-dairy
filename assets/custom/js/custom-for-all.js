@@ -31,7 +31,7 @@ $(document).ready(function () {
             contentType: false,
             processData: false,
             success: function (response) {
-                console.log(response.status,'response')
+                console.log(response.status, 'response')
                 if (response.status === 'ok') {
                     $('.customer_contact_no').val(response.data.customer_mobile);
                     $('.customer_gst_number').val(response.data.GST);
@@ -42,6 +42,47 @@ $(document).ready(function () {
         });
     });
 
+    $(document).on('click', '.open_ledger_popup', function () {
+
+        let id = $(this).data('id'); // ledger ID
+        let order_id = $(this).data('order_id'); // order ID
+        let payment_id = $(this).data('payment_id'); // payment ID
+        let controller = $(this).data('control'); // controller name from PHP
+        let type = $(this).data('type'); // payment ID
+
+        // Show modal
+        $('#returnModal').modal('show');
+        if(type == 'payment'){
+            $('#returnModalLabel').text('Payment Details');
+        }else{
+            $('#returnModalLabel').text('Order Details');
+        }
+        console.log( {
+                id: id,
+                order_id: order_id,
+                payment_id: payment_id,
+                type:type
+            })
+        // Optional: load content dynamically
+        $.ajax({
+            url: BASE_URL + controller + "/get_detail",
+            async: false,
+            type: "POST",
+            dataType: 'html',
+            data: {
+                id: id,
+                order_id: order_id,
+                payment_id: payment_id,
+                type:type
+            },
+            success: function (response) {
+                $('#returnModalContent').html(response);
+            },
+            error: function () {
+                $('#returnModalContent').html('<p class="text-danger">Failed to load content.</p>');
+            }
+        });
+    });
     $(document).on('click', '.open_return_popup', function () {
         if ($('#display_update_form .cancel_button').length > 0) {
             $('#display_update_form .cancel_button').click();
@@ -829,6 +870,9 @@ $(document).ready(function () {
                 }
                 if ($('#filter').length > 0) {
                     aoData.push({ "name": "filter", "value": $('#filter').val() });
+                }
+                if ($('#customer_name').length > 0) {
+                    aoData.push({ "name": "customer_name", "value": $('#customer_name').val() });
                 }
                 if ($('#event_id').length > 0) {
                     aoData.push({ "name": "event_id", "value": $('#event_id').val() });

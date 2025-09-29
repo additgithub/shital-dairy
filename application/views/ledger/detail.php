@@ -102,9 +102,7 @@
     }
 </style>
 <div class="content">
-    <?php
-    add_edit_form();
-    ?>
+
     <div class="row-fluid">
         <div class="span12">
             <div class="grid simple ">
@@ -113,19 +111,25 @@
                 ?>
                 <div class="grid-title">
                     <h4><?php echo $page_title; ?></h4>
+                    <a href="<?php echo base_url('ledger'); ?>" class="btn btn-primary btn-sm pull-right"><i class="fa fa-arrow-left"></i>  Back</a>
                 </div>
                 <div class="grid-body ">
-                    <table class="table common_datatable" data-control="items" data-mathod="manage" data-add-button="1">
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            
+                            <input type="hidden" id="customer_name" name="customer_id" class="search_mq" value="<?php echo isset($customer_id) ? $customer_id : ''; ?>">
+                        </div>
+                    </div>
+                    <table class="table common_datatable" data-control="ledger" data-mathod="detail_manage">
                         <thead>
                             <tr>
-
-                                <th width="20%">Item Code</th>
-                                <!-- <th width="20%">HSN Code</th> -->
-                                <th width="20%">Item Name</th>
-                                <!-- <th width="20%">Size</th> -->
-                                <!-- <th width="20%">Factor</th> -->
-                                <th width="20%"> Price Per KG/PCS</th>
-                                <th width="20%" class="hidden-phone">Action</th>
+                                <th width="20%">Customer Name</th>
+                                <th width="20%">Transaction Date</th>
+                                <th width="20%">Credit</th>
+                                <th width="20%">Debit</th>
+                                <th width="20%">Balance</th>
+                                <th width="20%">Remark</th>
+                                <th width="20%">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -133,6 +137,23 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Order Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Dynamic content will load here -->
+                <div id="returnModalContent">Loading...</div>
             </div>
         </div>
     </div>

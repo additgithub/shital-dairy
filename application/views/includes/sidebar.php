@@ -41,49 +41,50 @@
 
                 <li class="start <?php echo ($this->uri->segment(1) == "items") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('items'); ?>">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-list-alt"></i>
                         <span class="title">Items</span>
+                    </a>
+                </li>
+                  <li class="start <?php echo ($this->uri->segment(1) == "wadi") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('wadi'); ?>">
+                        <i class="fa fa-building"></i>
+                        <span class="title">Wadi</span>
                     </a>
                 </li>
                 <li class="start <?php echo ($this->uri->segment(1) == "customer") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('customer'); ?>">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-users"></i>
                         <span class="title">Customer</span>
                     </a>
                 </li>
-                <li class="start <?php echo ($this->uri->segment(1) == "wadi") ? "active" : ''; ?>">
-                    <a href="<?php echo base_url('wadi'); ?>">
-                        <i class="fa fa-user"></i>
-                        <span class="title">Wadi</span>
-                    </a>
-                </li>
-                <!-- <li class="start <?php echo ($this->uri->segment(1) == "purchase" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
-                    <a href="<?php echo base_url('purchase'); ?>">
-                        <i class="fa fa-user"></i>
-                        <span class="title">Purchase</span>
-                    </a>
-                </li> -->
+                
                 <li class="start <?php echo ($this->uri->segment(1) == "orders" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('orders'); ?>">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-shopping-cart"></i>
                         <span class="title">Orders</span>
                     </a>
                 </li>
-                <!-- <li class="start <?php echo ($this->uri->segment(1) == "employee") ? "active" : ''; ?>">
-                    <a href="<?php echo base_url('employee'); ?>">
-                        <i class="fa fa-user"></i>
-                        <span class="title">Employee</span>
+                <li class="start <?php echo ($this->uri->segment(1) == "payment") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('payment'); ?>">
+                        <i class="fa fa-credit-card"></i>
+                        <span class="title">Payment</span>
                     </a>
-                </li> -->
-                <!-- <li class="start <?php echo ($this->uri->segment(1) == "expense") ? "active" : ''; ?>">
-                    <a href="<?php echo base_url('expense'); ?>">
-                        <i class="fa fa-user"></i>
-                        <span class="title">Expense</span>
+                </li>
+                <li class="start <?php echo ($this->uri->segment(1) == "ledger" && $this->uri->segment(2) == "opening_balance") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('ledger/opening_balance'); ?>">
+                        <i class="fa fa-folder-open"></i>
+                        <span class="title">Opening Balance</span>
                     </a>
-                </li> -->
+                </li>
+                <li class="start <?php echo ($this->uri->segment(1) == "ledger" && $this->uri->segment(2) == "" || $this->uri->segment(1) == "ledger" && $this->uri->segment(2) == "view_details") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('ledger'); ?>">
+                        <i class="fa fa-book"></i>
+                        <span class="title">Ledger</span>
+                    </a>
+                </li>
                 <li class="start <?php echo ($this->uri->segment(1) == "orders" && $this->uri->segment(2) == "item_summary") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('orders/item_summary'); ?>">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-bar-chart"></i>
                         <span class="title">Item Wise Report</span>
                     </a>
                 </li>

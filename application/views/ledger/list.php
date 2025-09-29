@@ -102,9 +102,7 @@
     }
 </style>
 <div class="content">
-    <?php
-    add_edit_form();
-    ?>
+
     <div class="row-fluid">
         <div class="span12">
             <div class="grid simple ">
@@ -115,17 +113,28 @@
                     <h4><?php echo $page_title; ?></h4>
                 </div>
                 <div class="grid-body ">
-                    <table class="table common_datatable" data-control="items" data-mathod="manage" data-add-button="1">
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            <label>Customer<span class="spn_required">*</span></label>
+                            <select name="customer_name" class="form-control select2 customer_select search_mq" id="customer_name">
+                                <option value="">Select Customer</option>
+                                <?php
+                                if (isset($customers) && !empty($customers)) {
+                                    foreach ($customers as $customer) {
+                                        $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
+                                        echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="table common_datatable" data-control="ledger" data-mathod="manage">
                         <thead>
                             <tr>
-
-                                <th width="20%">Item Code</th>
-                                <!-- <th width="20%">HSN Code</th> -->
-                                <th width="20%">Item Name</th>
-                                <!-- <th width="20%">Size</th> -->
-                                <!-- <th width="20%">Factor</th> -->
-                                <th width="20%"> Price Per KG/PCS</th>
-                                <th width="20%" class="hidden-phone">Action</th>
+                                <th width="20%">Customer Name</th>
+                                <th width="20%">Balance</th>
+                                <th width="20%">Action</th>
                             </tr>
                         </thead>
                         <tbody>

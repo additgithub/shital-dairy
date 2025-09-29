@@ -3,7 +3,8 @@
 if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
-class Wadi extends CI_Controller {
+class Wadi extends CI_Controller
+{
 
     public $table_name = TBL_WADI;
     public $controllers = 'wadi';
@@ -11,7 +12,8 @@ class Wadi extends CI_Controller {
     public $title = 'Wadi';
     public $PrimaryKey = 'wadi_id';
 
-    function __construct() {
+    function __construct()
+    {
         parent::__construct();
         if (!$this->tank_auth->is_logged_in()) {
             redirect('auth/login/');
@@ -20,19 +22,22 @@ class Wadi extends CI_Controller {
         }
     }
 
-    function index() {
+    function index()
+    {
         $data['page_title'] = "Manage " . $this->title;
         $data['main_content'] = $this->view_name . '/list';
         // print_r($data);die();
         $this->load->view('main_content', $data);
     }
 
-    function add() {
+    function add()
+    {
         $data['page_title'] = "Add New " . $this->title;
         $this->load->view($this->view_name . '/form', $data);
     }
 
-    function edit($id) {
+    function edit($id)
+    {
 
         $data_found = 0;
         if ($id > 0) {
@@ -50,13 +55,14 @@ class Wadi extends CI_Controller {
         $this->load->view($this->view_name . '/form', $data);
     }
 
-    function submit_form() {
+    function submit_form()
+    {
         if ($this->input->post()) {
 
             $response = array("status" => "error", "heading" => "Unknown Error", "message" => "There was an unknown error that occurred. You will need to refresh the page to continue working.");
             $error_element = error_elements();
             $this->form_validation
-                    ->set_rules('wadi_name', 'Wadi Name', 'required');
+                ->set_rules('wadi_name', 'Wadi Name', 'required');
             $this->form_validation->set_message('required', 'The %s field is required.');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
 
@@ -68,7 +74,7 @@ class Wadi extends CI_Controller {
                     "wadi_name" => $this->input->post('wadi_name'),
                 );
 
-              
+
 
                 if ($id > 0):
                     $post_data['modified_by'] = $this->tank_auth->get_user_id();
@@ -98,25 +104,33 @@ class Wadi extends CI_Controller {
     }
 
 
-    function manage() {
+    function manage()
+    {
 
         $this->datatables->select($this->PrimaryKey . ', wadi_name')
-                ->from($this->table_name)
-                ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
+            ->from($this->table_name)
+            // ->add_column('action', $this->action_row('$1'), $this->PrimaryKey);
+            ->add_column('action', '$1', 'wadi_action_row(' . $this->PrimaryKey . ')');
         $this->datatables->unset_column($this->PrimaryKey);
         echo $this->datatables->generate();
     }
 
-   
 
-    function action_row($id) {
-        $action = <<<EOF
+
+    function action_row($id)
+    {
+        if ($id != 1) {
+
+
+            $action = <<<EOF
             <div class="tooltip-top">
                 <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-pencil"></i></a>
                 <a data-original-title="Remove {$this->title}" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal delete_btn btn-mini" data-id="{$id}" data-method="{$this->controllers}"><i class="fa fa-trash-o"></i></a>
             </div>
 EOF;
-        return $action;
+            return $action;
+        } else {
+            return '';
+        }
     }
-
 }
