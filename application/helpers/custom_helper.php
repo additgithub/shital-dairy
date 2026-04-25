@@ -3574,3 +3574,68 @@ function ledger_detail_action_row($id, $credit_value, $debit_value, $order_id, $
 
     return $html;
 }
+
+function gp_check_chk_id($customer_id, $selected_customer_id)
+{
+
+    if ($customer_id > 0 && !empty($selected_customer_id)) {
+        $selected_customer_id = explode(",", $selected_customer_id);
+        if (in_array($customer_id, $selected_customer_id)) {
+            return 'checked="checked"';
+        }
+    }
+    return '';
+}
+
+function ledger_opening_bal_row($id,$date='')
+{
+    $where = '';
+    if($date != ''){
+        $where = ' and DATE_FORMAT(txn_date,"%Y-%m") ="'.$date.'"';
+    }
+    $ci = &get_instance();
+    // Make sure Common model is loaded
+    if (!isset($ci->Common)) {
+        $ci->load->model('Common');
+    }
+    $ledger_entry = $ci->Common->get_info($id, TBL_LEDGER, 'ledger_id', '', 'customer_id');
+    if(!empty($ledger_entry)){
+        $customer_id = $ledger_entry->customer_id;
+        $ledger_opening_bal = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=1 ' . $where, 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+        if(!empty($ledger_opening_bal)){
+            return $ledger_opening_bal->balance;
+        }
+    }
+  
+
+    return 0;
+}
+function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_bal,$date=''){
+    // return ($opening_bal + $debit) - $credit;
+    // return ($opening_bal + $credit) - $debit;
+     $ci = &get_instance();
+    // Make sure Common model is loaded
+    if (!isset($ci->Common)) {
+        $ci->load->model('Common');
+    }
+     $where = '';
+    if($date != ''){
+        $where = ' DATE_FORMAT(txn_date,"%Y-%m") ="'.$date.'"';
+    }
+    $tCredit = 0;
+    $credit = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=0 AND ' . $where, 'SUM(credit) as TotalCredit');
+    if(!empty($credit)){
+        $tCredit = $credit->TotalCredit; 
+    }
+    $tDebit = 0;
+    $debit = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=0 AND ' . $where, 'SUM(debit) as TotalDebit');
+    if(!empty($debit)){
+        $tDebit = $debit->TotalDebit; 
+    }
+    $tOBal = 0;
+    $OBal = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=1 AND ' . $where, 'CASE WHEN credit = 0 THEN (debit * -1) ELSE credit END as TotalOBal');
+    if(!empty($OBal)){
+        $tOBal = $OBal->TotalOBal; 
+    }
+    return ($tOBal + $tCredit - $tDebit);
+}

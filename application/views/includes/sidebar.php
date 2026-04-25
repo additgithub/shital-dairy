@@ -88,6 +88,24 @@
                         <span class="title">Item Wise Report</span>
                     </a>
                 </li>
+                 <li class="start <?php echo ($this->uri->segment(1) == "reconcile" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('reconcile'); ?>">
+                        <i class="fa fa-book"></i>
+                        <span class="title">Reconcile</span>
+                    </a>
+                </li>
+                 <li class="start <?php echo ($this->uri->segment(1) == "ledger" && $this->uri->segment(2) == "ledger_report") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('ledger/ledger_report'); ?>">
+                        <i class="fa fa-book"></i>
+                        <span class="title">Summary Report</span>
+                    </a>
+                </li>
+                 <li class="start <?php echo ($this->uri->segment(1) == "sale-register" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('sale-register'); ?>">
+                        <i class="fa fa-book"></i>
+                        <span class="title">Sales Register Report</span>
+                    </a>
+                </li>
                 <!-- <li class="start <?php echo ($this->uri->segment(1) == "purchase" && $this->uri->segment(2) == "stock_summary") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('purchase/stock_summary'); ?>">
                         <i class="fa fa-user"></i>

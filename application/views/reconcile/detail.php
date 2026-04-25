@@ -111,39 +111,24 @@
                 ?>
                 <div class="grid-title">
                     <h4><?php echo $page_title; ?></h4>
+                    <a href="<?php echo base_url('ledger'); ?>" class="btn btn-primary btn-sm pull-right"><i class="fa fa-arrow-left"></i>  Back</a>
                 </div>
                 <div class="grid-body ">
                     <div class="row">
                         <div class="form-group col-md-4">
-                            <label>Customer<span class="spn_required">*</span></label>
-                            <select name="customer_name" class="form-control select2 customer_select search_mq" id="customer_name">
-                                <option value="">Select Customer</option>
-                                <?php
-                                if (isset($customers) && !empty($customers)) {
-                                    foreach ($customers as $customer) {
-                                        $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
-                                        echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
-                                    }
-                                }
-                                ?>
-                            </select>
-                        </div>
-                         <div class="form-group col-md-3">
-                            <label>Month</label>
-                            <input type="month" class="form-control search_mq" name="month" id="month" value="<?php echo date('Y-m'); ?>">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <a type="button" target="_blank" href="<?php echo base_url('ledger/download_list_report') ?>" class="btn btn-primary" style="margin-top: 25px;"><i class="fa fa-download"></i> Download Report</a>
+                            
+                            <input type="hidden" id="customer_name" name="customer_id" class="search_mq" value="<?php echo isset($customer_id) ? $customer_id : ''; ?>">
                         </div>
                     </div>
-                    <table class="table common_datatable" data-control="ledger" data-mathod="manage">
+                    <table class="table common_datatable" data-control="ledger" data-mathod="detail_manage">
                         <thead>
                             <tr>
                                 <th width="20%">Customer Name</th>
-                                <th width="20%">Opening Bal</th>
+                                <th width="20%">Transaction Date</th>
                                 <th width="20%">Credit</th>
                                 <th width="20%">Debit</th>
-                                <th width="20%">Closing Bal</th>
+                                <th width="20%">Balance</th>
+                                <th width="20%">Remark</th>
                                 <th width="20%">Action</th>
                             </tr>
                         </thead>
@@ -152,6 +137,23 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Order Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Dynamic content will load here -->
+                <div id="returnModalContent">Loading...</div>
             </div>
         </div>
     </div>

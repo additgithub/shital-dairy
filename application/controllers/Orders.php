@@ -4,6 +4,7 @@ if (!defined('BASEPATH'))
     exit('No direct script access allowed');
 
 // require 'vendor/autoload.php';
+require_once FCPATH . 'vendor/autoload.php';
 
 use Mpdf\Config\ConfigVariables;
 use Mpdf\Config\FontVariables;
@@ -177,6 +178,8 @@ class Orders extends CI_Controller
                             $this->Common->add_info(TBL_ORDER_DTL, $detail_data);
                         }
                         debit_ledger($this->input->post('customer_name'),$this->input->post('total_amount'),$id,$old_amount,'',$this->input->post('order_date'));
+                        $this->Common->update_ledger($old_amount, $this->input->post('total_amount'), $this->input->post('customer_name'), $id);
+                        
 
                         // order_item($id, $items);
                         $response = array("status" => "ok", "heading" => "Updated", "message" => "Order updated successfully.");
@@ -270,7 +273,10 @@ EOF;
 
     public function invoice_pdf($id)
     {
-        $order = $this->Common->get_info($id, $this->table_name, $this->PrimaryKey);
+        $join = array(
+            array('table' => TBL_CUSTOMER . ' c', 'on' => 'c.customer_id = o.customer_name', 'type' => 'LEFT')
+        );
+        $order = $this->Common->get_info($id, $this->table_name . ' o', $this->PrimaryKey,'','o.*,c.customer_name',$join);
 
         $join = array(
             array('table' => TBL_RETURN_QTY . ' r', 'on' => 'r.order_dtl_id = d.order_dtl_id', 'type' => 'LEFT')
@@ -285,11 +291,11 @@ EOF;
 
         $html = $this->load->view('orders/invoice_template', $data, true);
 
-        $defaultConfig = (new ConfigVariables())->getDefaults();
-        $fontDirs = $defaultConfig['fontDir'];
+        // $defaultConfig = (new ConfigVariables())->getDefaults();
+        // $fontDirs = $defaultConfig['fontDir'];
 
-        $defaultFontConfig = (new FontVariables())->getDefaults();
-        $fontData = $defaultFontConfig['fontdata'];
+        // $defaultFontConfig = (new FontVariables())->getDefaults();
+        // $fontData = $defaultFontConfig['fontdata'];
 
         $mpdf = new \Mpdf\Mpdf([
             'mode' => 'utf-8',

@@ -20,6 +20,34 @@ $(document).on("click", ".remove_image", function (event) {
 });
 
 $(document).ready(function () {
+     $("#download_sale_register").on("click", function () {
+        var customer_id = $("#customer_name").val();
+        var from_date   = $("#from_date").val();
+        var end_date    = $("#end_date").val();
+
+        if (from_date === "" || end_date === "") {
+            showErrorMessage('Please select date range.');
+            return;
+        }
+        var url = BASE_URL + "sale-register/download_report?customer_id=" + customer_id + "&start_date=" + from_date + "&end_date=" + end_date;
+        window.open(url, "_blank");
+
+       
+    });
+     $("#download_ledger").on("click", function () {
+        var customer_id = $("#customer_name").val();
+        var from_date   = $("#from_date").val();
+        var end_date    = $("#end_date").val();
+
+        if (from_date === "" || end_date === "") {
+            showErrorMessage('Please select date range.');
+            return;
+        }
+        var url = BASE_URL + "ledger/download_report_new?customer_id=" + customer_id + "&start_date=" + from_date + "&end_date=" + end_date;
+        window.open(url, "_blank");
+
+       
+    });
     // var cust_id = $('data-id').val();
     $(document).on('change', '.customer_select', function () {
         var cust_id = $(this).find(':selected').data('id');
@@ -52,17 +80,17 @@ $(document).ready(function () {
 
         // Show modal
         $('#returnModal').modal('show');
-        if(type == 'payment'){
+        if (type == 'payment') {
             $('#returnModalLabel').text('Payment Details');
-        }else{
+        } else {
             $('#returnModalLabel').text('Order Details');
         }
-        console.log( {
-                id: id,
-                order_id: order_id,
-                payment_id: payment_id,
-                type:type
-            })
+        console.log({
+            id: id,
+            order_id: order_id,
+            payment_id: payment_id,
+            type: type
+        })
         // Optional: load content dynamically
         $.ajax({
             url: BASE_URL + controller + "/get_detail",
@@ -73,7 +101,7 @@ $(document).ready(function () {
                 id: id,
                 order_id: order_id,
                 payment_id: payment_id,
-                type:type
+                type: type
             },
             success: function (response) {
                 $('#returnModalContent').html(response);
@@ -838,7 +866,7 @@ $(document).ready(function () {
         //            window.open($url, '_blank');
 
     });
-
+    var selectedIds = [];
     if ($('.common_datatable').length > 0) {
         var add_button = 0;
         var add_button_title = 'Add New';
@@ -846,7 +874,10 @@ $(document).ready(function () {
             add_button = 1;
         }
         var $url = BASE_URL + $('.common_datatable').attr('data-control') + '/' + $('.common_datatable').attr('data-mathod');
-
+        var $id = $('.common_datatable').attr('id');
+        if (typeof $id == "undefined") {
+            $id = 'common_datatable';
+        }
         var oTable = $('.common_datatable').dataTable({
             "bProcessing": true,
             "bServerSide": true,
@@ -855,13 +886,16 @@ $(document).ready(function () {
             scrollY: 200,
             scrollX: true,
             "sAjaxSource": $url,
-
+            "aoColumnDefs": ($id == 'reconcile_table') ? [{ "bSortable": false, "aTargets": [0] }] : [{ "bSortable": false, "aTargets": [-1] }],
             "sDom": "<'row'<'col-md-6'l <'toolbar'>><'col-md-6'f>r>t<'row'<'col-md-12'p i>>",
             "bLengthChange": false,
             "fnServerParams": function (aoData, fnCallback) {
                 //                if ($('#BoardID').length > 0) {
                 //                    aoData.push(  {"name": "BoardID", "value":  $('#BoardID').val() } );
                 //                }
+                if ($('#month').length > 0) {
+                    aoData.push({ "name": "month", "value": $('#month').val() });
+                }
                 if ($('#end_date').length > 0) {
                     aoData.push({ "name": "end_date", "value": $('#end_date').val() });
                 }
@@ -913,6 +947,17 @@ $(document).ready(function () {
                 if ($('#SourceName').length > 0) {
                     aoData.push({ "name": "SourceID", "value": $('#SourceName').val() });
                 }
+                if ($("input[name='paper_id[]']").length > 0) {
+                    var paper_ids = $("input[name='paper_id[]']").map(function () {
+                        return $(this).val();
+                    })
+                        .get()
+                        .join(",");
+                    aoData.push({
+                        "name": "paper_ids",
+                        "value": paper_ids
+                    });
+                }
                 if ($("input[name='event_id[]']").length > 0) {
                     var auction_ids = $("input[name='event_id[]']").map(function () {
                         return $(this).val();
@@ -922,6 +967,17 @@ $(document).ready(function () {
                     aoData.push({
                         "name": "auction_ids",
                         "value": auction_ids
+                    });
+                }
+                if ($("input[name='customer_id[]']").length > 0) {
+                    var customer_ids = $("input[name='customer_id[]']").map(function () {
+                        return $(this).val();
+                    })
+                        .get()
+                        .join(",");
+                    aoData.push({
+                        "name": "customer_ids",
+                        "value": customer_ids
                     });
                 }
                 if ($("input[name='bid_id[]']").length > 0) {
@@ -948,6 +1004,7 @@ $(document).ready(function () {
                 $('.search_mq').on('change', function () {
                     oTable.fnDraw();
                 });
+
                 $('.date_filter').datepicker({
 
                     format: "yyyy-mm-dd",
@@ -959,7 +1016,15 @@ $(document).ready(function () {
                 });
             },
             "fnDrawCallback": function () {
+                $('.question_id_chk_all').each(function () {
+                    var val = $(this).val();
+                    if ($.inArray(val, selectedIds) !== -1) {
+                        $(this).prop('checked', true);
+                    }
+                });
 
+                // also update master checkbox state
+                updateMasterCheckbox();
                 $('.tooltip-top a').tooltip();
                 $(".event_id_chk").unbind("change");
                 $(".event_id_chk").change(function () {
@@ -995,12 +1060,121 @@ $(document).ready(function () {
                         // $("#rgp_" + id).parent().parent().css("background-color", '');
                     }
                 });
+                $(".question_id_chk").unbind("change");
+                $(".question_id_chk").change(function () {
+                    var id = $(this).val();
+                    if ($(this).is(':checked')) {
+                        var maxAllowed = 2;
+                        var cnt = $("input[name='customer_id[]']").length;
+                        var html = '<div id="customer_id_' + id + '">' +
+                            '<input type="hidden" name="customer_id[]" value="' + id + '">' +
+                            '</div>';
+                        $("#customer_div").append(html);
+
+                        $("#rgp_" + id).parent().parent().css("background-color", '#d8dcde');
+                        var cnt = $("input[name='customer_id[]']").length;
+                        if (cnt == maxAllowed) {
+                            $('.merge_paper_div').removeClass('hidden');
+                        }
+                    } else {
+                        $('.merge_paper_div').addClass('hidden');
+                        $("#customer_id_" + id).remove();
+                        $("#rgp_" + id).parent().parent().css("background-color", '');
+                    }
+                });
 
             },
             "oLanguage": { "sLengthMenu": "_MENU_ ", "sInfo": "Showing <b>_START_ to _END_</b> of _TOTAL_ entries" },
         });
 
+
     }
+    $(document).on('change', '.question_id_chk_all', function () {
+        var val = $(this).val();
+        if ($(this).is(':checked')) {
+            if ($.inArray(val, selectedIds) === -1) {
+                selectedIds.push(val);
+            }
+        } else {
+            selectedIds = $.grep(selectedIds, function (id) {
+                return id != val;
+            });
+            $('#customer_id_all').prop('checked', false); // uncheck master
+        }
+    });
+    $('#clear_customer_ledger').on('click', function (e) {
+        let isAllChecked = $('#customer_id_all').is(':checked');
+        let hasAnyCustomer = $('input[name="customer_id[]"]').length > 0;
+        let customer_ids = $('input[name="customer_id[]"]').map(function () {
+            return $(this).val();
+        }).get();
+        if (!(isAllChecked || hasAnyCustomer)) {
+            e.preventDefault(); // stop form submit / button action
+            showErrorMessage("Please select 'All' or at least one customer.");
+            return false;
+        }else{
+            $.ajax({
+            type: 'POST',
+            url: BASE_URL + 'reconcile' + '/clear_ledger',
+            async: false,
+            data: { isAllChecked: isAllChecked,customer_ids:customer_ids },
+            dataType: 'json',
+            beforeSend: function () {
+                
+                $('#display_update_form').html('<div class="loader_wrapper"><div class="loader"></div></div>');
+                $('#add_edit_form').show();
+            },
+            success: function (returnData) {
+                if (returnData.status == "ok") {
+                        showSuccessCustom(returnData.message)
+                }
+
+                setTimeout(function () {
+                    
+                    window.location.reload();
+                }, 5000);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                $('#add_edit_form').slideUp(500, function () {
+                    $('#display_update_form').html('');
+
+                });
+                showErrorMessage('There was an unknown error that occurred. You will need to refresh the page to continue working.');
+            },
+            complete: function () {
+            }
+        });
+
+        return false;
+        }
+    });
+    $('#customer_id_all').on('change', function () {
+        var checked = $(this).is(':checked');
+
+        // on current page
+        $('.question_id_chk').each(function () {
+            var val = $(this).val();
+            if (checked) {
+                $(this).prop('checked', true);
+                if ($.inArray(val, selectedIds) === -1) {
+                    selectedIds.push(val);
+                }
+            } else {
+                $(this).prop('checked', false);
+                selectedIds = $.grep(selectedIds, function (id) {
+                    return id != val;
+                });
+            }
+        });
+    });
+
+    function updateMasterCheckbox() {
+        var allChecked = $('.question_id_chk_all').length > 0 &&
+            $('.question_id_chk_all:checked').length === $('.question_id_chk_all').length;
+
+        $('#customer_id_all').prop('checked', allChecked);
+    }
+
     if ($('.auction_datatable').length > 0) {
         var add_button = 0;
         var add_button_title = 'Add New';

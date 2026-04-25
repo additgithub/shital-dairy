@@ -551,15 +551,15 @@ class Common extends CI_Model
     }
 
     public function get_stock_summary($start_date = null, $end_date = null)
-{
-    $where = "";
-    if (!empty($start_date) && !empty($end_date)) {
-        $start = $this->db->escape($start_date);
-        $end = $this->db->escape($end_date);
-        $where = "WHERE h.order_date BETWEEN $start AND $end";
-    }
+    {
+        $where = "";
+        if (!empty($start_date) && !empty($end_date)) {
+            $start = $this->db->escape($start_date);
+            $end = $this->db->escape($end_date);
+            $where = "WHERE h.order_date BETWEEN $start AND $end";
+        }
 
-    $sql = "
+        $sql = "
     SELECT
         CONCAT(i.item_name, ' (', i.size, ')') AS item_name,
         SUM(d.qty) AS qty_pkt,
@@ -595,18 +595,18 @@ class Common extends CI_Model
     $where
     ";
 
-    return $this->db->query($sql)->result();
-}
-    public function current_balance_summary($start_date = null, $end_date = null)
-{
-    $where = "";
-    if (!empty($start_date) && !empty($end_date)) {
-        $start = $this->db->escape($start_date);
-        $end = $this->db->escape($end_date);
-        $where = "WHERE h.order_date BETWEEN $start AND $end";
+        return $this->db->query($sql)->result();
     }
+    public function current_balance_summary($start_date = null, $end_date = null)
+    {
+        $where = "";
+        if (!empty($start_date) && !empty($end_date)) {
+            $start = $this->db->escape($start_date);
+            $end = $this->db->escape($end_date);
+            $where = "WHERE h.order_date BETWEEN $start AND $end";
+        }
 
-    $sql = "
+        $sql = "
     SELECT
     i.item_name,
     IFNULL(pqry.purchaseqty,0) as purchaseqty,
@@ -647,9 +647,9 @@ LEFT JOIN (
 ) AS dqty ON i.item_id = dqty.item_id;
     ";
 
-    return $this->db->query($sql)->result();
-}
-public function get_last_order_date($table, $order_date)
+        return $this->db->query($sql)->result();
+    }
+    public function get_last_order_date($table, $order_date)
     {
         $this->db->select($order_date);
         $this->db->order_by($order_date, 'DESC');
@@ -661,4 +661,282 @@ public function get_last_order_date($table, $order_date)
         return 0;
     }
 
+
+    public function _oldupdate_ledger($old_amount, $new_amount, $customer_id, $order_id)
+    {
+
+        $sql = "update tbl_ledger set balance=balance+($old_amount-$new_amount) where customer_id=$customer_id and ledger_id >=(select ledger_id from tbl_ledger where  customer_id=$customer_id and order_id=$order_id)";
+        return $this->db->query($sql);
+    }
+    public function update_ledger($old_amount, $new_amount, $customer_id, $order_id)
+{
+    $sql = "
+        UPDATE tbl_ledger 
+        SET balance = balance + ($old_amount - $new_amount)
+        WHERE customer_id = $customer_id 
+          AND ledger_id >= (
+              SELECT ledger_id 
+              FROM (
+                  SELECT ledger_id 
+                  FROM tbl_ledger 
+                  WHERE customer_id = $customer_id 
+                    AND order_id = $order_id
+              ) AS t
+          )
+    ";
+    return $this->db->query($sql);
+}
+
+
+    public function get_ledger_report($start_date, $end_date, $customer_id = null)
+    {
+       
+        $this->db->select('l.*, c.customer_name');
+        $this->db->from('tbl_ledger l');
+        $this->db->join('tbl_customer c', 'c.customer_id = l.customer_id', 'left');
+        if($start_date != ''){
+            $this->db->where('l.txn_date >=', $start_date);
+        }
+        if($end_date != ''){
+            $this->db->where('l.txn_date <=', $end_date);
+        }
+
+        if (!empty($customer_id)) {
+            $this->db->where('l.customer_id', $customer_id);
+        }
+
+        $this->db->order_by('l.customer_id', 'ASC');
+        $this->db->order_by('l.ledger_id', 'ASC');
+
+        return $this->db->get()->result_array();
+    }
+    // application/models/Ledger_model.php
+    public function get_order_summary_html($order_id)
+    {
+        if (!$order_id) return '';
+
+        // Get order header
+        $order = $this->db->select('o.*, c.customer_name, c.customer_email as email, c.customer_mobile as phone')
+            ->from('tbl_order_hdr o')
+            ->join('tbl_customer c', 'c.customer_id = o.customer_name', 'left')
+            ->where('o.order_hdr_id', $order_id)
+            ->get()
+            ->row();
+
+        // Get order items
+        $items = $this->db->select('oi.*, it.item_name')
+            ->from('tbl_order_dtl oi')
+            ->join('tbl_item it', 'it.item_id = oi.item_id', 'left')
+            ->where('oi.order_hdr_id', $order_id)
+            ->get()
+            ->result();
+
+        if (!$order) return '';
+
+        // Build HTML
+        ob_start();
+?>
+        <div>
+            <strong>Order #<?= "ORD" . date("Ymd", strtotime($order->created_on)) . str_pad($order->order_hdr_id, 4, "0", STR_PAD_LEFT) ?></strong><br>
+            Date: <?= date("d-m-Y", strtotime($order->order_date)) ?><br>
+            Customer: <?= $order->customer_name ?><br>
+            Email: <?= $order->email ?><br>
+            Phone: <?= $order->phone ?><br>
+
+            <table border="1" cellspacing="0" cellpadding="5" width="100%">
+                <thead style="background:#f2f2f2;">
+                    <tr>
+                        <th>#</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Return Qty</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $i = 1;
+                    $grand_total = 0; ?>
+                    <?php foreach ($items as $it):
+                        $line_total = ($it->qty - $it->return_qty) * $it->price_per_item;
+                        $grand_total += $line_total;
+                    ?>
+                        <tr>
+                            <td><?= $i++ ?></td>
+                            <td><?= $it->item_name ?></td>
+                            <td><?= $it->qty ?></td>
+                            <td><?= $it->return_qty ?></td>
+                            <td><?= number_format($it->price_per_item, 2) ?></td>
+                            <td><?= number_format($line_total, 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <?php
+                    if($order->delivery_charges > 0){
+                        $grand_total += $order->delivery_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Delivery Charges</strong></td>
+                        <td><?= number_format($order->delivery_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    if($order->dry_ice_box_charges > 0){
+                        $grand_total += $order->dry_ice_box_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Dry Ice Box Charges</strong></td>
+                        <td><?= number_format($order->dry_ice_box_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    if($order->other_charges > 0){
+                        $grand_total += $order->other_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Other Charges</strong></td>
+                        <td><?= number_format($order->other_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <tr>
+                        <td colspan="5" align="right"><strong>Grand Total</strong></td>
+                        <td><?= number_format($grand_total, 2) ?></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+<?php
+        return ob_get_clean();
+    }
+
+     public function get_order_report($start_date, $end_date, $customer_id = null)
+    {
+        $this->db->select('l.*, c.customer_name');
+        $this->db->from('tbl_order_hdr l');
+        $this->db->join('tbl_customer c', 'c.customer_id = l.customer_name', 'left');
+        $this->db->where('l.order_date >=', $start_date);
+        $this->db->where('l.order_date <=', $end_date);
+
+        if (!empty($customer_id)) {
+            $this->db->where('l.customer_name', $customer_id);
+        }
+
+        // $this->db->order_by('l.customer_id', 'ASC');
+        $this->db->order_by('l.order_date', 'ASC');
+
+        return $this->db->get()->result_array();
+    }
+
+     public function get_order_summary_html_without_customer_details($order_id)
+    {
+        if (!$order_id) return '';
+
+        // Get order header
+        $order = $this->db->select('o.*, c.customer_name, c.customer_email as email, c.customer_mobile as phone')
+            ->from('tbl_order_hdr o')
+            ->join('tbl_customer c', 'c.customer_id = o.customer_name', 'left')
+            ->where('o.order_hdr_id', $order_id)
+            ->get()
+            ->row();
+
+        // Get order items
+        $items = $this->db->select('oi.*, it.item_name')
+            ->from('tbl_order_dtl oi')
+            ->join('tbl_item it', 'it.item_id = oi.item_id', 'left')
+            ->where('oi.order_hdr_id', $order_id)
+            ->get()
+            ->result();
+
+        if (!$order) return '';
+
+        // Build HTML
+        ob_start();
+?>
+        <div>
+
+            <table border="1" cellspacing="0" cellpadding="5" width="100%">
+                <thead style="background:#f2f2f2;">
+                    <tr>
+                        <th>#</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Return Qty</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $i = 1;
+                    $grand_total = 0; ?>
+                    <?php foreach ($items as $it):
+                        $line_total = ($it->qty - $it->return_qty) * $it->price_per_item;
+                        $grand_total += $line_total;
+                    ?>
+                        <tr>
+                            <td><?= $i++ ?></td>
+                            <td><?= $it->item_name ?></td>
+                            <td><?= $it->qty ?></td>
+                            <td><?= $it->return_qty ?></td>
+                            <td><?= number_format($it->price_per_item, 2) ?></td>
+                            <td><?= number_format($line_total, 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <?php
+                    if($order->delivery_charges > 0){
+                        $grand_total += $order->delivery_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Delivery Charges</strong></td>
+                        <td><?= number_format($order->delivery_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    if($order->dry_ice_box_charges > 0){
+                        $grand_total += $order->dry_ice_box_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Dry Ice Box Charges</strong></td>
+                        <td><?= number_format($order->dry_ice_box_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    if($order->other_charges > 0){
+                        $grand_total += $order->other_charges;
+                        ?>
+                        
+                    <tr>
+                        <td colspan="5" align="right"><strong>Other Charges</strong></td>
+                        <td><?= number_format($order->other_charges, 2) ?></td>
+                    </tr>
+                    <?php
+                    }
+                    ?>
+                    <tr>
+                        <td colspan="5" align="right"><strong>Grand Total</strong></td>
+                        <td><?= number_format($grand_total, 2) ?></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+<?php
+        return ob_get_clean();
+    }
 }
