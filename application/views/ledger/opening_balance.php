@@ -39,8 +39,8 @@ $order_id = $edit_mode ? $data_info->$DataID : '';
 $date = array(
     'name' => 'date',
     'id' => 'date',
-    'type' => 'date',
-    'value' => $edit_mode ? $data_info->date : (set_value('date') ?: ''),
+    'type' => 'month',
+    'value' => $edit_mode ? $data_info->date : (set_value('date') ?: date('Y-m')),
     'class' => "form-control",
     'required' => true
 );
@@ -124,7 +124,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                             </select>
                         </div>
                         <div class="form-group col-md-4">
-                            <label>Date<span class="spn_required">*</span></label>
+                            <label>Opening Month<span class="spn_required">*</span></label>
                             <?= form_input($date); ?>
                         </div>
                         <div class="form-group col-md-4">

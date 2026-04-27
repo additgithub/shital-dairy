@@ -91,28 +91,21 @@ class Ledger extends CI_Controller
 
                 $id = ($this->input->post($this->PrimaryKey) && $this->input->post($this->PrimaryKey) > 0) ? $this->input->post($this->PrimaryKey) : 0;
                 $customer_id = $this->input->post('customer_name');
-                if ($id == 0) {
-                    $customer_already_opening_record = $this->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=1', 'balance', false, false);
-                    if (!empty($customer_already_opening_record)) {
-                        $response = array("status" => "error", "heading" => "Already Exists...", "message" => "Opening balance for this customer already exists.");
-                        echo json_encode($response);
-                        die;
-                    }
-                }
-                if (!empty($customer_last_entry)) {
-                    $balance = $customer_last_entry->balance;
-                }
+                // if ($id == 0) {
+                //     $customer_already_opening_record = $this->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'is_opening_bal=1', 'balance', false, false);
+                //     if (!empty($customer_already_opening_record)) {
+                //         $response = array("status" => "error", "heading" => "Already Exists...", "message" => "Opening balance for this customer already exists.");
+                //         echo json_encode($response);
+                //         die;
+                //     }
+                // }
 
                 $post_data = array(
                     "customer_id" => $this->input->post('customer_name'),
-                    "txn_date" => $this->input->post('date'),
+                    "txn_date" => $this->input->post('date').'-01',
                     "remark" => 'Opning Balance',
                 );
-                $customer_last_entry = $this->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', '', 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
                 $balance = 0;
-                if (!empty($customer_last_entry)) {
-                    $balance = $customer_last_entry->balance;
-                }
                 if ($this->input->post('type') == 'debit') {
                     $post_data['credit'] = 0;
                     $post_data['debit'] = $this->input->post('total_amount');
@@ -126,12 +119,24 @@ class Ledger extends CI_Controller
                 }
                 $post_data['is_opening_bal'] = 1;
 
-                if ($temp_id = $this->Common->add_info($this->table_name, $post_data)):
+                $opening_month = date('Y-m',strtotime($post_data['txn_date'])); 
+                $current_opening_bal_entry = $this->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', "is_opening_bal=1 AND DATE_FORMAT(txn_date,'%Y-%m')='".$opening_month."'","ledger_id,txn_date");
 
-                    $response = array("status" => "ok", "heading" => "Add successfully...", "message" => "Details added successfully.");
-                else:
-                    $response = array("status" => "error", "heading" => "Not Added successfully...", "message" => "Details not added successfully.");
-                endif;
+                if(!empty($current_opening_bal_entry)){
+                    if ($this->Common->update_info($current_opening_bal_entry->ledger_id, $this->table_name, $post_data, $this->PrimaryKey)):
+                        recalculate_ledger($this->input->post('customer_name'),$post_data['txn_date']);
+                        $response = array("status" => "ok", "heading" => "Add successfully...", "message" => "Details added successfully.");
+                    else:
+                        $response = array("status" => "error", "heading" => "Not Added successfully...", "message" => "Details not added successfully.");
+                    endif;
+                }else{
+                    if ($temp_id = $this->Common->add_info($this->table_name, $post_data)):
+                        recalculate_ledger($this->input->post('customer_name'),$post_data['txn_date']);
+                        $response = array("status" => "ok", "heading" => "Add successfully...", "message" => "Details added successfully.");
+                    else:
+                        $response = array("status" => "error", "heading" => "Not Added successfully...", "message" => "Details not added successfully.");
+                    endif;
+                }
             } else {
                 $errors = $this->form_validation->error_array();
                 $response['error'] = $errors;
@@ -219,7 +224,10 @@ EOF;
         $this->datatables->unset_column($this->PrimaryKey);
         $this->datatables->unset_column('cp.order_id');
         $this->datatables->unset_column('cp.payment_id');
-        $this->datatables->order_by($this->PrimaryKey, 'DESC');
+        $this->datatables->order_by('cp.txn_date', 'DESC');
+        $this->datatables->order_by('cp.payment_id', 'DESC');
+        $this->datatables->order_by('cp.order_id', 'DESC');
+        $this->datatables->order_by('cp.is_opening_bal', 'ASC');
         echo $this->datatables->generate();
     }
 

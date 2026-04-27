@@ -643,9 +643,11 @@ class Remove extends CI_Controller {
      function orders($pid = 0, $where = 'order_hdr_id') {
         $id = ($pid > 0) ? $pid : (($this->input->post('id')) ? $this->input->post('id') : 0);
         if ($id > 0):
-            
+            $order = $this->Common->get_info($id,TBL_ORDER_HDR,$where,'','order_hdr_id,customer_name,order_date');
+            $data_remove = $this->Remove_records->remove_data($id, $where, TBL_ORDER_DTL);
             $data_remove = $this->Remove_records->remove_data($id, $where, TBL_ORDER_HDR);
-
+            $data_remove = $this->Remove_records->remove_data($id, 'order_id', TBL_LEDGER);
+            recalculate_ledger($order->customer_name,$order->order_date);
             if ($pid > 0):
                 return ($data_remove) ? TRUE : FALSE;
             else:
@@ -655,6 +657,24 @@ class Remove extends CI_Controller {
 
         endif;
     }
+
+    function payment($pid = 0, $where = 'payment_id') {
+        $id = ($pid > 0) ? $pid : (($this->input->post('id')) ? $this->input->post('id') : 0);
+        if ($id > 0):
+            $payment = $this->Common->get_info($id,TBL_CUSTOMER_PAYMENT,$where,'','payment_id,customer_id,payment_date');
+            $data_remove = $this->Remove_records->remove_data($id, $where, TBL_LEDGER);
+            $data_remove = $this->Remove_records->remove_data($id, $where, TBL_CUSTOMER_PAYMENT);
+            recalculate_ledger($payment->customer_id,$payment->payment_date);
+            if ($pid > 0):
+                return ($data_remove) ? TRUE : FALSE;
+            else:
+                $response = ($data_remove) ? array('status' => 'ok', 'message' => 'Details removed successfully.!') : array('status' => 'ok', 'message' => 'Details not removed successfully.!');
+                $this->response($response);
+            endif;
+
+        endif;
+    }
+
      function wadi($pid = 0, $where = 'wadi_id') {
         $id = ($pid > 0) ? $pid : (($this->input->post('id')) ? $this->input->post('id') : 0);
         if ($id > 0):

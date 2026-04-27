@@ -178,7 +178,7 @@ class Orders extends CI_Controller
                             $this->Common->add_info(TBL_ORDER_DTL, $detail_data);
                         }
                         debit_ledger($this->input->post('customer_name'),$this->input->post('total_amount'),$id,$old_amount,'',$this->input->post('order_date'));
-                        $this->Common->update_ledger($old_amount, $this->input->post('total_amount'), $this->input->post('customer_name'), $id);
+                        // $this->Common->update_ledger($old_amount, $this->input->post('total_amount'), $this->input->post('customer_name'), $id);
                         
 
                         // order_item($id, $items);
