@@ -132,18 +132,12 @@
                             <label>Month</label>
                             <input type="month" class="form-control search_mq" name="month" id="month" value="<?php echo date('Y-m'); ?>">
                         </div>
-                        <div class="form-group col-md-4">
-                            <a type="button" href="javascript:;" class="btn btn-primary" id="download_full_ledger" style="margin-top: 25px;"><i class="fa fa-download"></i> Download Report</a>
-                        </div>
                     </div>
-                    <table class="table common_datatable" data-control="ledger" data-mathod="manage">
+                    <table class="table common_datatable" data-control="client_sale_register" data-mathod="manage">
                         <thead>
                             <tr>
-                                <th width="20%">Customer Name</th>
-                                <th width="20%">Opening Bal</th>
-                                <th width="20%">Credit</th>
-                                <th width="20%">Debit</th>
-                                <th width="20%">Closing Bal</th>
+                                <th width="60%">Customer Name</th>
+                                <th width="20%">Total Order</th>
                                 <th width="20%">Action</th>
                             </tr>
                         </thead>

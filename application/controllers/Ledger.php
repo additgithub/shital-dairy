@@ -186,6 +186,7 @@ class Ledger extends CI_Controller
         $view_report_url = base_url() . $this->controllers . '/download_report_new?customer_id=' . $id;
         if ($this->Month != '') {
             $url .= '?month=' . $this->Month;
+            $view_report_url .= '&month=' . $this->Month;
         }
         $action = <<<EOF
             <div class="tooltip-top">
@@ -352,8 +353,9 @@ EOF;
 
     public function download_report_new()
     {
-        $start_date  = $this->input->get('start_date');
-        $end_date    = $this->input->get('end_date');
+        $range = getMonthDateRange($this->input->get('month'));
+        $start_date  = $range['first_date'];
+        $end_date    = $range['last_date'];
         $customer_id = $this->input->get('customer_id');
 
         $report = $this->Common->get_ledger_report($start_date, $end_date, $customer_id);
@@ -480,19 +482,34 @@ EOF;
     public function download_list_report()
     {
         
+        $month    = $this->input->get('month');
+        $customer_id = $this->input->get('customer_id');
         
+        $where_con = "1=1";
+        if(!empty($customer_id)){
+            $where_con .= " AND cp.customer_id='".$customer_id."'";
+        }
 
-        $report = $this->Common->get_all_info(1,$this->table_name . ' cp','1', '', 'cp.ledger_id,cus.customer_name,0 as opening_bal,(SELECT CASE WHEN balance >= 0 THEN balance ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN balance <= 0 THEN balance * -1 ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal', false, [
+        if(!empty($month)){
+            $where_con .= " AND DATE_FORMAT(txn_date,'%Y-%m') ='".$month."'";
+        }
+        $report = $this->Common->get_all_info(1,$this->table_name . ' cp','1', $where_con, 'cp.ledger_id,cus.customer_name,0 as opening_bal,(SELECT CASE WHEN balance >= 0 THEN balance ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN balance <= 0 THEN balance * -1 ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal', false, [
             ['table' => TBL_CUSTOMER . ' cus', 'on' => 'cus.customer_id = cp.customer_id	', 'type' => 'LEFT']
         ],'cp.customer_id',array('field' => 'cus.customer_name', 'order' => 'ASC'));
+
+        if(empty($report)){
+            $this->session->set_flashdata('error_msg', 'No data found for download!');
+            redirect(BASE_URL.'ledger');
+        }
         
         foreach ($report as $row) {
             // --- Order summary short format ---
-           $row->opening_bal = ledger_opening_bal_row($row->ledger_id);
-           $row->closing_bal = ledger_closing_bal_row($row->ledger_id,$row->credit,$row->debit,$row->opening_bal);
+           $row->opening_bal = ledger_opening_bal_row($row->ledger_id,$month);
+           $row->closing_bal = ledger_closing_bal_row($row->ledger_id,$row->customer_id,$row->credit,$row->debit,$row->opening_bal,$month);
 
         }
         $data['reports']    = $report;
+        $data['month']    = $month;
         // echo '<pre>';
         // print_r($report); die;
         $html = $this->load->view('ledger/ledger_list_pdf', $data, true);

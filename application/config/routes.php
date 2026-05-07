@@ -49,6 +49,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Examples:	my-controller/index	-> my_controller/index
 |		my-controller/my-method	-> my_controller/my_method
 */
+
+$route['tiny/(:any)'] = 'tiny/index/$1';
+
 $route['default_controller'] = 'dashboard';
 //$route['car/add'] = 'car/add';
 //$route['car/submit_form'] = 'car/submit_form';

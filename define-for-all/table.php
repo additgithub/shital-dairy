@@ -18,5 +18,6 @@ define("TBL_INVOICE", "tbl_invoice");
 define("TBL_WADI", "tbl_wadi");
 define("TBL_CUSTOMER_PAYMENT", "tbl_customer_payment");
 define("TBL_LEDGER", "tbl_ledger");
+define("TBL_TINY_URL", "tbl_tiny_url");
 
 ?>

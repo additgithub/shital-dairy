@@ -20,11 +20,9 @@
     <thead>
         <tr>
             <th>Customer Name</th>
-            <th>Transaction Date</th>
-            <th>Payment / Order</th>
-            <th>Credit</th>
-            <th>Debit</th>
-            <th>Balance</th>
+            <th>Order Date</th>
+            <th>Order No</th>
+            <th>Total Amount</th>
             <th>Remarks</th>
         </tr>
     </thead>
@@ -33,22 +31,13 @@
             foreach($report as $row) { ?>
             <tr>
                 <td><?= $row['customer_name'] ?></td>
-                <td><?= date("d/m/Y", strtotime($row['txn_date'])) ?></td>
+                <td><?= date("d/m/Y", strtotime($row['order_date'])) ?></td>
                 <td>
-                    <?php 
-                        if ($row['order_id'] > 0) {
-                            echo "OD" . str_pad($row['order_id'], 4, "0", STR_PAD_LEFT);
-                        } elseif ($row['payment_id'] > 0) {
-                            echo "PAY" . str_pad($row['payment_id'], 4, "0", STR_PAD_LEFT);
-                        } else {
-                            echo "-";
-                        }
-                    ?>
+                    <?php echo $row['order_no']; ?>
                 </td>
-                <td><?= ($row['credit'] > 0) ? number_format($row['credit'], 2) : '' ?></td>
-                <td><?= ($row['debit'] > 0) ? number_format($row['debit'], 2) : '' ?></td>
-                <td><?= number_format($row['balance'], 2) ?></td>
-                <!-- <td><?= nl2br($row['remark']) ?></td> -->
+                <td>
+                    <?php echo number_format($row['amount'],2); ?>
+                </td>
                 <td><?= str_replace('<br>', '<br />', nl2br($row['remark'])) ?></td>
 
             </tr>

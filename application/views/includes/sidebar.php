@@ -106,6 +106,13 @@
                         <span class="title">Sales Register Report</span>
                     </a>
                 </li>
+
+                <li class="start <?php echo ($this->uri->segment(1) == "client-sale-register" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('client-sale-register'); ?>">
+                        <i class="fa fa-book"></i>
+                        <span class="title">Client Wise Sales Register</span>
+                    </a>
+                </li>
                 <!-- <li class="start <?php echo ($this->uri->segment(1) == "purchase" && $this->uri->segment(2) == "stock_summary") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('purchase/stock_summary'); ?>">
                         <i class="fa fa-user"></i>

@@ -3672,7 +3672,7 @@ function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_
     if (!isset($ci->Common)) {
         $ci->load->model('Common');
     }
-     $where = '';
+     $where = '1=1';
     if($date != ''){
         $where = ' DATE_FORMAT(txn_date,"%Y-%m") ="'.$date.'"';
     }
@@ -3692,4 +3692,111 @@ function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_
         $tOBal = $OBal->TotalOBal; 
     }
     return ($tOBal + $tCredit - $tDebit);
+}
+
+function generateUniqueId($length = 16){
+    $bytes = ceil($length / 2);
+    return bin2hex(random_bytes($bytes));
+}
+
+function send_whatsapp_template($to, $template_name, $data=[])
+{
+    $url = WA_BASE_URL.WA_PHONE_NUMBER_ID."/messages";
+    $payload = [
+        "messaging_product" => "whatsapp",
+        "to" => $to,
+        "type" => "template",
+        "template" => [
+            "name" => $template_name,
+            "language" => [
+                "code" => "en_IN"
+            ],
+            "components" => $data
+        ]
+    ];
+
+    $ch = curl_init();
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => [
+            "Content-Type: application/json",
+            "Authorization: Bearer " . WA_ACCESS_TOKEN
+        ],
+    ]);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        log_message('error', 'WhatsApp CURL Error: ' . curl_error($ch));
+        return [
+            "status" => false,
+            "message" => curl_error($ch)
+        ];
+    }
+
+    curl_close($ch);
+
+    $result = json_decode($response, true);
+
+    // ✅ SUCCESS CASE
+    if (isset($result['messages'][0]['id'])) {
+
+        $message_id = $result['messages'][0]['id'];
+        $status = $result['messages'][0]['message_status'];
+
+        log_message('info', 'WhatsApp Success: ' . $response);
+
+        return [
+            "status" => true,
+            "message_id" => $message_id,
+            "message_status" => $status,
+            "raw" => $result
+        ];
+    }
+
+    // ❌ ERROR CASE
+    if (isset($result['error'])) {
+
+        $error_msg = $result['error']['message'];
+        $error_code = $result['error']['code'];
+
+        log_message('error', 'WhatsApp Failed: ' . $response);
+
+        return [
+            "status" => false,
+            "error_code" => $error_code,
+            "message" => $error_msg,
+            "raw" => $result
+        ];
+    }
+
+    // ⚠️ UNKNOWN RESPONSE
+    log_message('error', 'WhatsApp Unknown Response: ' . $response);
+
+    return [
+        "status" => false,
+        "message" => "Unknown response",
+        "raw" => $result
+    ];
+}
+
+function getMonthDateRange($monthYear)
+{
+    // Convert to timestamp
+    $timestamp = strtotime($monthYear . '-01');
+
+    // First date of month
+    $first_date = date('Y-m-01', $timestamp);
+
+    // Last date of month
+    $last_date = date('Y-m-t', $timestamp);
+
+    return [
+        'first_date' => $first_date,
+        'last_date'  => $last_date
+    ];
 }

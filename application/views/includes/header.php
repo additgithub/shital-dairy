@@ -98,7 +98,9 @@
 <!-- BEGIN BODY -->
 
 <body class="opens">
-
+    <div class="custom-loader-div hide">
+        <div class="custom-loader"></div>
+    </div>
     <!-- BEGIN HEADER -->
 
     <div class="header navbar navbar-inverse ">

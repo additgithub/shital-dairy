@@ -103,3 +103,12 @@ div.dataTables_wrapper {
   display: flex;
   align-items: flex-end;
 }
+
+.send_whatsapp {
+  padding: 0.44rem 0.55rem;
+}
+
+.send_whatsapp img {
+  object-fit: cover;
+  display: block;
+}

@@ -34,6 +34,21 @@ $(document).ready(function () {
 
        
     });
+
+    $("#download_full_ledger").on("click", function () {
+        var customer_id = $("#customer_name").val();
+        var month   = $("#month").val();
+
+        if (month === "") {
+            showErrorMessage('Please select date range.');
+            return;
+        }
+        var url = BASE_URL + "ledger/download_list_report?customer_id=" + customer_id + "&month=" + month;
+        window.open(url, "_blank");
+
+       
+    });
+
      $("#download_ledger").on("click", function () {
         var customer_id = $("#customer_name").val();
         var from_date   = $("#from_date").val();
@@ -2733,5 +2748,14 @@ function progress_bar_process(percentage, timer) {
         setTimeout(function () {
             $('#success_message').html('');
         }, 5000);
+    }
+}
+
+
+function hideShowLoader(action='show'){
+    if(action == 'hide'){
+        $('.custom-loader-div').addClass('hide');
+    }else{
+        $('.custom-loader-div').removeClass('hide');
     }
 }

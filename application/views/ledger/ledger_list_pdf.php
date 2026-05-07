@@ -36,7 +36,7 @@
 <body>
 
     <h2 class="center">Ledger Report</h2>
-
+    <p><strong>Month:</strong> <?=date("F, Y", strtotime($month))?></p>
 
 
     <table border="1" cellspacing="0" cellpadding="5" width="100%">

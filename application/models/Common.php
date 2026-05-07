@@ -705,8 +705,10 @@ LEFT JOIN (
             $this->db->where('l.customer_id', $customer_id);
         }
 
-        $this->db->order_by('l.customer_id', 'ASC');
-        $this->db->order_by('l.ledger_id', 'ASC');
+        $this->db->order_by('l.txn_date', 'DESC');
+        $this->db->order_by('l.payment_id', 'DESC');
+        $this->db->order_by('l.order_id', 'DESC');
+        $this->db->order_by('l.is_opening_bal', 'ASC');
 
         return $this->db->get()->result_array();
     }
