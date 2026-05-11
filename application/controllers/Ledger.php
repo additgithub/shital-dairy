@@ -33,6 +33,7 @@ class Ledger extends CI_Controller
     {
         $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
         $data['page_title'] = "Manage " . $this->title;
+        $data["extra_js"] = array("manage-sales-report");
         $data['main_content'] = $this->view_name . '/list';
         // print_r($data);die();
         $this->load->view('main_content', $data);
@@ -183,15 +184,17 @@ class Ledger extends CI_Controller
     function action_row($id)
     {
         $url = base_url() . $this->controllers . '/view_details/' . $id;
-        $view_report_url = base_url() . $this->controllers . '/download_report_new?customer_id=' . $id;
         if ($this->Month != '') {
             $url .= '?month=' . $this->Month;
-            $view_report_url .= '&month=' . $this->Month;
         }
+
+        $report_url = base_url() . $this->controllers . '/report_action';
+        $icon_url = base_url("assets/img/icon/whatsapp.png");
         $action = <<<EOF
             <div class="tooltip-top">
                 <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="{$url}" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-eye"></i></a>
-                <a data-original-title="Download Report" target="_blank" data-placement="top" data-toggle="tooltip" href="{$view_report_url}" class="btn btn-xs btn-default btn-equal btn-mini"><i class="fa fa-download"></i></a>
+                <a data-original-title="Send Whatsapp Message" data-placement="top" data-toggle="tooltip" href="javascript:;" class="btn btn-xs btn-default btn-equal send_whatsapp btn-mini" data-id="{$id}" data-url="{$report_url}"><img src="{$icon_url}" /></a>
+                <a data-original-title="Download Report" data-placement="top" data-toggle="tooltip" data-id="{$id}" data-url="{$report_url}" class="btn btn-default btn-equal btn-mini btn_report_download"><i class="fa fa-download"></i></a>
                
             </div>
 EOF;
@@ -492,8 +495,9 @@ EOF;
 
         if(!empty($month)){
             $where_con .= " AND DATE_FORMAT(txn_date,'%Y-%m') ='".$month."'";
-        }
-        $report = $this->Common->get_all_info(1,$this->table_name . ' cp','1', $where_con, 'cp.ledger_id,cus.customer_name,0 as opening_bal,(SELECT CASE WHEN balance >= 0 THEN balance ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN balance <= 0 THEN balance * -1 ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal', false, [
+            }
+        $where = ' AND DATE_FORMAT(txn_date, "%Y-%m") = "'.$month.'"';
+        $report = $this->Common->get_all_info(1,$this->table_name . ' cp','1', $where_con, $this->PrimaryKey . ', cus.customer_name,0 as opening_bal,(SELECT CASE WHEN SUM(credit) IS NULL THEN 0 ELSE SUM(credit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0  '.$where.' ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN SUM(debit) IS NULL THEN 0 ELSE SUM(debit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0 '.$where.' ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal', false, [
             ['table' => TBL_CUSTOMER . ' cus', 'on' => 'cus.customer_id = cp.customer_id	', 'type' => 'LEFT']
         ],'cp.customer_id',array('field' => 'cus.customer_name', 'order' => 'ASC'));
 
@@ -529,5 +533,117 @@ EOF;
 
         $mpdf->WriteHTML($html);
         $mpdf->Output('Ledger_Report.pdf', 'I');
+    }
+
+    public function report_action()
+    {
+        $customer_id  = $this->input->get('customer_id');
+        $month    = $this->input->get('month');
+        $is_whatsapp    = $this->input->get('is_whatsapp') ?? 0;
+        
+        $where_con = "1=1";
+        if(!empty($customer_id)){
+            $where_con .= " AND cp.customer_id='".$customer_id."'";
+        }
+
+        if(!empty($month)){
+            $where_con .= " AND DATE_FORMAT(txn_date,'%Y-%m') ='".$month."'";
+        }
+
+        $where = ' AND DATE_FORMAT(txn_date, "%Y-%m") = "'.$month.'"';
+
+        $report = $this->Common->get_info(1,$this->table_name . ' cp','1', $where_con, $this->PrimaryKey . ', cus.customer_name,0 as opening_bal,(SELECT CASE WHEN SUM(credit) IS NULL THEN 0 ELSE SUM(credit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0  '.$where.' ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN SUM(debit) IS NULL THEN 0 ELSE SUM(debit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0 '.$where.' ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal', [
+            ['table' => TBL_CUSTOMER . ' cus', 'on' => 'cus.customer_id = cp.customer_id	', 'type' => 'LEFT']
+        ],'cp.customer_id',array('field' => 'cus.customer_name', 'order' => 'ASC'));
+
+        if(empty($report)){
+            $this->session->set_flashdata('error_msg', 'No data found for download!');
+            redirect(BASE_URL.'ledger');
+        }
+
+        $report->opening_bal = ledger_opening_bal_row($report->ledger_id,$month);
+        $report->closing_bal = ledger_closing_bal_row($report->ledger_id,$report->customer_id,$report->credit,$report->debit,$report->opening_bal,$month);
+
+        if($is_whatsapp){
+
+            $customer = $this->Common->get_info($customer_id,TBL_CUSTOMER,'customer_id','','customer_id,customer_name,customer_whatsapp_number');
+
+            $to_number = format_whatsapp_number($customer->customer_whatsapp_number);
+
+            if (!$to_number) {
+                $response = array("status" => "error", "heading" => "Invalid number.", "message" => "Invalid WhatsApp number.");
+                echo json_encode($response);
+                die;
+            }
+
+            $url = generate_tiny_url(
+                'ledger',
+                [
+                    'customer_id' => $customer_id ?? '',
+                    'month' => $month ?? '',
+                ]
+            );
+
+            $parsed = parse_url($url);
+            
+            $short_url = ltrim($parsed['path'], '/');
+
+            $month_text = date('F, Y',strtotime($month));
+
+            $payload = [
+                [
+                    "type" => "header",
+                    "parameters" => [
+                        [
+                            "type" => "image",
+                            "image" => [
+                                "link" => base_url("assets/img/logo.png")
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    "type" => "body",
+                    "parameters" => [
+                        ["type" => "text", "parameter_name" =>"customer_name", "text" => $customer->customer_name],
+                        ["type" => "text", "parameter_name" =>"summary_month", "text" => $month_text],
+                        ["type" => "text", "parameter_name" =>"opening_balance", "text" => formatAmount($report->opening_bal)],
+                        ["type" => "text", "parameter_name" =>"total_purchases", "text" => formatAmount($report->debit)],
+                        ["type" => "text", "parameter_name" =>"total_payments", "text" => formatAmount($report->credit)],
+                        ["type" => "text", "parameter_name" =>"closing_balance", "text" => formatAmount($report->closing_bal)],
+                    ]
+                ],
+                [
+                    "type" => "button",
+                    "sub_type" => "url",
+                    "index" => "0",
+                    "parameters" => [
+                        ["type" => "text", "text" => $short_url]
+                    ]
+                ]
+            ];
+
+            $is_send = send_whatsapp_template($customer->customer_whatsapp_number,'ledger_summary',$payload);
+    
+            if($is_send['status']){
+                $response = array("status" => "ok", "heading" => "Sent successfully.", "message" => "Whatsapp message send successfully.");
+            }else{
+                $response = array("status" => "error", "heading" => "Not Sent successfully", "message" => "Whatsapp message not send successfully.");
+            }
+            echo json_encode($response);
+            die;
+        }else{
+            $url = generate_tiny_url(
+                'ledger',
+                [
+                    'customer_id' => $customer_id ?? '',
+                    'month' => $month ?? '',
+                ]
+            );
+
+            $response = array("status" => "ok", "heading" => "Link generated.", "message" => "Link generated successfully.","data" => $url);
+            echo json_encode($response);
+            die;
+        }
     }
 }

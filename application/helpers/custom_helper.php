@@ -3800,3 +3800,68 @@ function getMonthDateRange($monthYear)
         'last_date'  => $last_date
     ];
 }
+
+function format_whatsapp_number($number)
+{
+    // Remove spaces, +, -, etc.
+    $number = preg_replace('/\D/', '', $number);
+
+    // Case 1: starts with 91 and total 12 digits
+    if (strlen($number) == 12 && substr($number, 0, 2) == '91') {
+        return $number;
+    }
+
+    // Case 2: starts with +91 (already removed + above, so same as 91 case)
+    if (strlen($number) == 12 && substr($number, 0, 2) == '91') {
+        return $number;
+    }
+
+    // Case 3: pure 10 digit number → add 91
+    if (strlen($number) == 10) {
+        return '91' . $number;
+    }
+
+    // ❌ Invalid number
+    return false;
+}
+
+function generate_tiny_url($used_for='report',$data){
+    $ci = &get_instance();
+    $json_data = normalize_json($data);
+
+    // check existing
+    $existing = $ci->db
+        ->where('used_for', $used_for)
+        ->where('data', $json_data)
+        ->get(TBL_TINY_URL)
+        ->row();
+
+    if ($existing) {
+        // ✅ Already exists → reuse hash
+        $hash = $existing->hash;
+    } else {
+        // ❌ Not exists → create new
+        $hash = generateUniqueId();
+
+        $post_data = [
+            'hash'       => $hash,
+            'used_for'   => $used_for,
+            'data'       => $json_data,
+            'created_on' => date("Y-m-d H:i:s"),
+            'created_by' => $ci->tank_auth->get_user_id()
+        ];
+
+        $ci->Common->add_info(TBL_TINY_URL, $post_data);
+    }
+
+    return base_url('tiny/'.$hash);
+}
+
+function normalize_json($data) {
+    ksort($data);
+    return json_encode($data);
+}
+
+function formatAmount($amount){
+    return '₹'.number_format($amount,2);
+}

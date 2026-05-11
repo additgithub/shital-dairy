@@ -65,7 +65,7 @@ class Client_sale_register extends CI_Controller
 
     function action_row($id)
     {
-        $report_url = base_url("client_sale_register/report_action");
+        $report_url = base_url() . $this->controllers . '/report_action';
         $icon_url = base_url("assets/img/icon/whatsapp.png");
         $action = <<<EOF
             <div class="tooltip-top">
@@ -74,43 +74,6 @@ class Client_sale_register extends CI_Controller
             </div>
         EOF;
         return $action;
-    }
-
-    function generate_tiny_url($data){
-        $used_for = 'report';
-        $json_data = $this->normalize_json($data);
-
-        // check existing
-        $existing = $this->db
-            ->where('used_for', $used_for)
-            ->where('data', $json_data)
-            ->get(TBL_TINY_URL)
-            ->row();
-
-        if ($existing) {
-            // ✅ Already exists → reuse hash
-            $hash = $existing->hash;
-        } else {
-            // ❌ Not exists → create new
-            $hash = generateUniqueId();
-
-            $post_data = [
-                'hash'       => $hash,
-                'used_for'   => $used_for,
-                'data'       => $json_data,
-                'created_on' => date("Y-m-d H:i:s"),
-                'created_by' => $this->tank_auth->get_user_id()
-            ];
-
-            $this->Common->add_info(TBL_TINY_URL, $post_data);
-        }
-
-        return base_url('tiny/'.$hash);
-    }
-
-    function normalize_json($data) {
-        ksort($data);
-        return json_encode($data);
     }
 
     public function report_action()
@@ -123,7 +86,7 @@ class Client_sale_register extends CI_Controller
 
             $customer = $this->Common->get_info($customer_id,TBL_CUSTOMER,'customer_id','','customer_id,customer_name,customer_whatsapp_number');
 
-            $to_number = $this->format_whatsapp_number($customer->customer_whatsapp_number);
+            $to_number = format_whatsapp_number($customer->customer_whatsapp_number);
 
             if (!$to_number) {
                 $response = array("status" => "error", "heading" => "Invalid number.", "message" => "Invalid WhatsApp number.");
@@ -131,10 +94,13 @@ class Client_sale_register extends CI_Controller
                 die;
             }
 
-            $url = $this->generate_tiny_url([
-                'customer_id' => $customer_id ?? '',
-                'month' => $month ?? '',
-            ]);
+            $url = generate_tiny_url(
+                'report',
+                [
+                    'customer_id' => $customer_id ?? '',
+                    'month' => $month ?? '',
+                ]
+            );
 
             $parsed = parse_url($url);
             
@@ -184,38 +150,17 @@ class Client_sale_register extends CI_Controller
             echo json_encode($response);
             die;
         }else{
-            $url = $this->generate_tiny_url([
-                'customer_id' => $customer_id ?? '',
-                'month' => $month ?? '',
-            ]);
+            $url = generate_tiny_url(
+                'report',
+                [
+                    'customer_id' => $customer_id ?? '',
+                    'month' => $month ?? '',
+                ]
+            );
 
             $response = array("status" => "ok", "heading" => "Link generated.", "message" => "Link generated successfully.","data" => $url);
             echo json_encode($response);
             die;
         }
-    }
-
-    function format_whatsapp_number($number)
-    {
-        // Remove spaces, +, -, etc.
-        $number = preg_replace('/\D/', '', $number);
-
-        // Case 1: starts with 91 and total 12 digits
-        if (strlen($number) == 12 && substr($number, 0, 2) == '91') {
-            return $number;
-        }
-
-        // Case 2: starts with +91 (already removed + above, so same as 91 case)
-        if (strlen($number) == 12 && substr($number, 0, 2) == '91') {
-            return $number;
-        }
-
-        // Case 3: pure 10 digit number → add 91
-        if (strlen($number) == 10) {
-            return '91' . $number;
-        }
-
-        // ❌ Invalid number
-        return false;
     }
 }

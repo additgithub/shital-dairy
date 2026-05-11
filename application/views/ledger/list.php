@@ -140,10 +140,10 @@
                         <thead>
                             <tr>
                                 <th width="20%">Customer Name</th>
-                                <th width="20%">Opening Bal</th>
-                                <th width="20%">Credit</th>
-                                <th width="20%">Debit</th>
-                                <th width="20%">Closing Bal</th>
+                                <th width="15%">Opening Bal</th>
+                                <th width="15%">Credit</th>
+                                <th width="15%">Debit</th>
+                                <th width="15%">Closing Bal</th>
                                 <th width="20%">Action</th>
                             </tr>
                         </thead>

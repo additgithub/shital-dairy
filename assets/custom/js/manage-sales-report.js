@@ -26,6 +26,7 @@ $(document).ready(function () {
                 showErrorMessage('There was an unknown error that occurred. You will need to refresh the page to continue working.');
             },
             complete: function () {
+                hideShowLoader('hide');
             }
         });
 

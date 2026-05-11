@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<h2 class="center">Summary Report</h2>
+<h2 class="center">Ledger Summary Report</h2>
 <p><strong>From:</strong> <?=date("d-m-Y", strtotime($start_date))?> 
    <strong>To:</strong> <?=date("d-m-Y", strtotime($end_date))?></p>
 
