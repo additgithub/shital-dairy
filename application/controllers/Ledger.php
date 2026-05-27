@@ -623,7 +623,7 @@ EOF;
                 ]
             ];
 
-            $is_send = send_whatsapp_template($customer->customer_whatsapp_number,'ledger_summary',$payload);
+            $is_send = send_whatsapp_template($to_number,'ledger_summary',$payload);
     
             if($is_send['status']){
                 $response = array("status" => "ok", "heading" => "Sent successfully.", "message" => "Whatsapp message send successfully.");
