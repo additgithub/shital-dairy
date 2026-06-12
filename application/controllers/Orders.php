@@ -58,7 +58,7 @@ class Orders extends CI_Controller
             ->join("tbl_item_stock s", "i.item_id = s.item_id", "left")
             ->order_by("i.item_code", "ASC");
         $data['items'] = $this->db->get()->result();
-        $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+        $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,is_gst');
         $data['wadis'] = $this->Common->get_all_info(1, TBL_WADI, 1, '', 'wadi_id,wadi_name',false,false,false,array('field' => 'wadi_name','order' => 'ASC'));
         // print_r($data['customers']);die;
         // print_r($data['items']);die;
@@ -91,7 +91,7 @@ class Orders extends CI_Controller
                 // ✅ get items for dropdown
                 $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id','','*,(CONCAT(item_code," - ",item_name)) as item_name',false,false,false,array('field' => 'item_code','order' => 'ASC'));
                 $data_found = 1;
-                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,is_gst');
             }
         }
         if ($data_found == 0) {
@@ -146,6 +146,7 @@ class Orders extends CI_Controller
                     'order_date'     => $this->input->post('order_date'),
                     'customer_name'  => $this->input->post('customer_name'),
                     'contact_no'     => $this->input->post('contact_no'),
+                    'tax_amount'         => $this->input->post('tax_amount') ?? 0,
                     'amount'         => $this->input->post('total_amount'),
                     'delivery_charges'         => $this->input->post('delivery_charges'),
                     'dry_ice_box_charges'         => $this->input->post('dry_ice_box_charges'),
@@ -463,7 +464,7 @@ EOF;
                 // ✅ get items for dropdown
                 $data["items"] = $this->Common->get_all_info('', TBL_M_ITEMS, 'item_id','','*,(CONCAT(item_code," - ",item_name)) as item_name',false,false,false,array('field' => 'item_code','order' => 'ASC'));
                 $data_found = 1;
-                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,');
+                $data['customers'] = $this->Common->get_all_info(1, TBL_CUSTOMER, 1, '', 'customer_id,customer_name,is_gst');
             }
         }
         if ($data_found == 0) {

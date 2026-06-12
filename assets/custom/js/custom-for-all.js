@@ -64,26 +64,32 @@ $(document).ready(function () {
        
     });
     // var cust_id = $('data-id').val();
-    $(document).on('change', '.customer_select', function () {
-        var cust_id = $(this).find(':selected').data('id');
-        $.ajax({
-            url: BASE_URL + "orders/get_customer_details/" + cust_id, // <-- make a controller method
-            type: "GET",
-            dataType: 'json',
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function (response) {
-                console.log(response.status, 'response')
-                if (response.status === 'ok') {
-                    $('.customer_contact_no').val(response.data.customer_mobile);
-                    $('.customer_gst_number').val(response.data.GST);
-                } else {
-                    $('.customer_contact_no').val('');
-                }
-            },
-        });
-    });
+    // $(document).on('change', '.customer_select', function () {
+    //     var cust_id = $(this).find(':selected').data('id');
+    //     var is_gst = $(this).find(':selected').data('gst');
+    //     if(is_gst == 1){
+    //         $('.tax-amount').removeClass('hide');
+    //     }else{
+    //         $('.tax-amount').addClass('hide');
+    //     }
+    //     $.ajax({
+    //         url: BASE_URL + "orders/get_customer_details/" + cust_id, // <-- make a controller method
+    //         type: "GET",
+    //         dataType: 'json',
+    //         cache: false,
+    //         contentType: false,
+    //         processData: false,
+    //         success: function (response) {
+    //             console.log(response.status, 'response')
+    //             if (response.status === 'ok') {
+    //                 $('.customer_contact_no').val(response.data.customer_mobile);
+    //                 $('.customer_gst_number').val(response.data.GST);
+    //             } else {
+    //                 $('.customer_contact_no').val('');
+    //             }
+    //         },
+    //     });
+    // });
 
     $(document).on('click', '.open_ledger_popup', function () {
 
@@ -923,6 +929,9 @@ $(document).ready(function () {
                 if ($('#customer_name').length > 0) {
                     aoData.push({ "name": "customer_name", "value": $('#customer_name').val() });
                 }
+                if ($('#filter_month').length > 0) {
+                    aoData.push({ "name": "month", "value": $('#filter_month').val() });
+                }
                 if ($('#event_id').length > 0) {
                     aoData.push({ "name": "event_id", "value": $('#event_id').val() });
                 }
@@ -1119,6 +1128,7 @@ $(document).ready(function () {
     });
     $('#clear_customer_ledger').on('click', function (e) {
         let isAllChecked = $('#customer_id_all').is(':checked');
+        let month = $('#month').val();
         let hasAnyCustomer = $('input[name="customer_id[]"]').length > 0;
         let customer_ids = $('input[name="customer_id[]"]').map(function () {
             return $(this).val();
@@ -1132,7 +1142,7 @@ $(document).ready(function () {
             type: 'POST',
             url: BASE_URL + 'reconcile' + '/clear_ledger',
             async: false,
-            data: { isAllChecked: isAllChecked,customer_ids:customer_ids },
+            data: { isAllChecked: isAllChecked,month: month,customer_ids:customer_ids },
             dataType: 'json',
             beforeSend: function () {
                 
@@ -2695,7 +2705,13 @@ $(document).ready(function () {
         return false;
     });
 
-
+    $(document).on('change', 'input[name="is_gst"]', function () {
+        if ($(this).val() == 1) {
+            $('.gst-section').addClass('display');
+        } else {
+            $('.gst-section').removeClass('display');
+        }
+    });
 });
 
 function get_updated_fullfilment_count() {

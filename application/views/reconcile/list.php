@@ -114,19 +114,38 @@
                 </div>
                 <div class="grid-body ">
                     <div class="row">
+                        <?php
+                            $currentMonth = date('Y-m', strtotime('-1 months'));
+                            $minMonth = date('Y-m', strtotime('-3 months'));
+                        ?>
+
                         <div class="form-group col-md-4">
-                            <button type="button" class="btn btn-primary" id="clear_customer_ledger">Clear All</button>
+                            <label>Month</label>
+                            <input 
+                                type="month" 
+                                class="form-control search_mq" 
+                                name="month" 
+                                id="month"
+                                value="<?php echo $currentMonth; ?>"
+                                min="<?php echo $minMonth; ?>"
+                                max="<?php echo $currentMonth; ?>"
+                            >
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="button" class="btn btn-primary" id="clear_customer_ledger" style="margin-top: 25px;">Clear All</button>
                             
                         </div>
                     </div>
                     <table class="table common_datatable" id="reconcile_table" data-control="reconcile" data-mathod="manage">
                         <thead>
                             <tr>
-                                <th width="20%"><input type="checkbox" class="mdc-checkbox__native-control question_id_chk_all" name="customer_ids" id="customer_id_all" value="all"> Select All</th>
+                                <th width="10%"><input type="checkbox" class="mdc-checkbox__native-control question_id_chk_all" name="customer_ids" id="customer_id_all" value="all"> Select All</th>
                                 <th width="20%">Customer Name</th>
-                                <th width="20%">Credit</th>
-                                <th width="20%">Debit</th>
-                                <th width="20%">Action</th>
+                                <th width="15%">Opening Bal</th>
+                                <th width="15%">Credit</th>
+                                <th width="15%">Debit</th>
+                                <th width="15%">Closing Bal</th>
+                                <th width="10%">Action</th>
                             </tr>
                         </thead>
                         <tbody>

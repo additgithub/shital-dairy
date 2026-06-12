@@ -86,6 +86,7 @@ $other_charges = array(
     'class' => "form-control other_charges"
 );
 $total_amount = $edit_mode ? $data_info->amount : 0;
+$tax_amount = $edit_mode ? $data_info->tax_amount : 0;
 
 $form_attr = array('class' => 'default_form', 'id' => 'order_frm', 'autocomplete' => "off");
 $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Submit', 'class' => 'btn btn-success btn-cons');
@@ -120,7 +121,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                     if (isset($customers) && !empty($customers)) {
                         foreach ($customers as $customer) {
                             $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
-                            echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                            echo "<option data-gst=\"{$customer->is_gst}\" data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
                         }
                     }
                     ?>
@@ -148,7 +149,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             </div>
              <div class="form-group col-md-4">
                 <label>Wadi<span class="spn_required">*</span></label>
-                <select name="wadi_id" class="form-control select2 customer_select" required>
+                <select name="wadi_id" class="form-control select2" required>
                     <option value="">Select Wadi</option>
                     <?php
                     if (isset($wadis) && !empty($wadis)) {
@@ -186,11 +187,17 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                 <label>Other Charges</label>
                 <!-- <input type="text" name="other_charges" id="other_charges" class="form-control" value="<?= $other_charges ?>" readonly> -->
                 <?= form_input($other_charges); ?>
+            </div>  
+            <div class="form-group col-md-3 tax-amount <?= $tax_amount==0?'hide':'' ?>">
+                <label>Tax Amount</label>
+                <input type="text" name="tax_amount" id="tax_amount" class="form-control" value="<?= $tax_amount ?? 0 ?>" readonly>
             </div>
             <div class="form-group col-md-3">
                 <label>Total Amount</label>
                 <input type="text" name="total_amount" id="total_amount" class="form-control" value="<?= $total_amount ?>" readonly>
             </div>
+        </div>
+        <div class="row">
             <div class="form-group col-md-8">
                 <label>Remarks</label>
                 <?= form_textarea($remarks); ?>
@@ -245,7 +252,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Qty (KG)</label>
-            <input type="number" name="item_qty[]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required>
+            <input type="number" name="item_qty[]" class="form-control item_qty" min="0" step="0.01"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required>
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Return Qty (KG)</label>
@@ -299,7 +306,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
                 </div>
                 <div class="form-group col-md-2 cus_filds">
                     <label>Qty (KG)</label>
-                    <input type="number" name="item_qty[]" class="form-control item_qty" min="1" value="${qty}" data-price="0" oninput="updateRowPrice(this)" step="any" required>
+                    <input type="number" name="item_qty[]" class="form-control item_qty" min="0" step="0.01" value="${qty}" data-price="0" oninput="updateRowPrice(this)" step="any" required>
                 </div>
                 <div class="form-group col-md-2 cus_filds">
                     <label>Return Qty (KG)</label>
@@ -391,6 +398,34 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         calculateTotal();
     }
 
+    $(document).on('change', '.customer_select', function () {
+        var cust_id = $(this).find(':selected').data('id');
+        var is_gst = $(this).find(':selected').data('gst');
+        if(is_gst == 1){
+            $('.tax-amount').removeClass('hide');
+        }else{
+            $('.tax-amount').addClass('hide');
+        }
+        $.ajax({
+            url: BASE_URL + "orders/get_customer_details/" + cust_id, // <-- make a controller method
+            type: "GET",
+            dataType: 'json',
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log(response.status, 'response')
+                if (response.status === 'ok') {
+                    $('.customer_contact_no').val(response.data.customer_mobile);
+                    $('.customer_gst_number').val(response.data.GST);
+                } else {
+                    $('.customer_contact_no').val('');
+                }
+                calculateTotal();
+            },
+        });
+    });
+
     function calculateTotal() {
         let total = 0;
         // $('.price_per_kg').each(function() {
@@ -399,6 +434,13 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         $('.item_total').each(function() {
             total += parseFloat($(this).val()) || 0;
         });
+
+        var is_gst = $('.customer_select').find(':selected').data('gst');
+        let tax_amount = 0;
+        if(is_gst == 1){
+            tax_amount = parseFloat(((total * 5) / 100).toFixed(2));
+            $('#tax_amount').val(tax_amount.toFixed(2));
+        }
         $('#total_amount').val(total.toFixed(2));
 
         let deliveryCharges = $('#delivery_charges').val();
@@ -407,7 +449,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         deliveryCharges = parseFloat(deliveryCharges) || 0;
         dryIceBoxCharges = parseFloat(dryIceBoxCharges) || 0;
         otherCharges = parseFloat(otherCharges) || 0;
-        total += deliveryCharges + dryIceBoxCharges + otherCharges;
+        total += tax_amount + deliveryCharges + dryIceBoxCharges + otherCharges;
         $('#total_amount').val(total.toFixed(2));
     }
 

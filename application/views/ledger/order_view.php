@@ -46,9 +46,41 @@
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
+                    <?php
+                        if(!empty($order->delivery_charges)){ ?>
+                            <tr>
+                                <th colspan="4" class="text-end">Delivery Charges</th>
+                                <th><?= number_format($order->delivery_charges, 2) ?></th>
+                            </tr>
+                    <?php } ?>
+                    <?php
+                        if(!empty($order->dry_ice_box_charges)){ ?>
+                            <tr>
+                                <th colspan="4" class="text-end">Dry Ice Box Charges</th>
+                                <th><?= number_format($order->dry_ice_box_charges, 2) ?></th>
+                            </tr>
+                    <?php } ?>
+                    <?php
+                        if(!empty($order->other_charges)){ ?>
+                            <tr>
+                                <th colspan="4" class="text-end">Other Charges</th>
+                                <th><?= number_format($order->other_charges, 2) ?></th>
+                            </tr>
+                    <?php } ?>
+                    <?php
+                        if(!empty($order->tax_amount) && $order->tax_amount>0){ ?>
+                            <tr>
+                                <th colspan="4" class="text-end">CGST (2.5%)</th>
+                                <th><?= number_format($order->tax_amount / 2, 2) ?></th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end">SGST (2.5%)</th>
+                                <th><?= number_format($order->tax_amount / 2, 2) ?></th>
+                            </tr>
+                    <?php } ?>
                     <tr>
                         <th colspan="4" class="text-end">Grand Total</th>
-                        <th><?= number_format($grand_total, 2) ?></th>
+                        <th><?= number_format($order->amount, 2) ?></th>
                     </tr>
                 </tfoot>
             </table>

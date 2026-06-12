@@ -136,17 +136,28 @@ class Reconcile extends CI_Controller
                 $temp_qt_id = implode(",", $temp_qt_id_array);
             }
         }
+
+        $where = '';
+        if ($this->input->post('month') && $this->input->post('month') != '') {
+            $where = ' AND DATE_FORMAT(txn_date, "%Y-%m") = "'.$this->input->post('month').'"';
+        }
         // echo $temp_qt_id;die;
 
         if ($this->input->post('customer_name') && $this->input->post('customer_name') > 0) {
             $this->datatables->where('cp.customer_id', $this->input->post('customer_name'));
         }
-        $this->datatables->select($this->PrimaryKey . ', "" as checkbox,cus.customer_name,(SELECT CASE WHEN balance >= 0 THEN balance ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN balance <= 0 THEN balance * -1 ELSE 0 END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id')
+        $this->datatables->select($this->PrimaryKey . ', "" as checkbox,cus.customer_name,0 as opening_bal,(SELECT CASE WHEN SUM(credit) IS NULL THEN 0 ELSE SUM(credit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0  '.$where.' ORDER BY ledger_id DESC LIMIT 1) as credit,(SELECT CASE WHEN SUM(debit) IS NULL THEN 0 ELSE SUM(debit) END FROM ' . $this->table_name . ' WHERE customer_id = cp.customer_id AND is_opening_bal=0 '.$where.' ORDER BY ledger_id DESC LIMIT 1) as debit,cus.customer_id,0 as closing_bal')
             ->join(TBL_CUSTOMER . ' cus', 'cus.customer_id = cp.customer_id	', 'LEFT')
             ->from($this->table_name . ' as cp')
-            ->add_column('action', $this->action_row('$1'), 'cus.customer_id');
+            ->add_column(
+                'action',
+                $this->action_row('$1', '$2'),
+                'cus.customer_id,"' . $this->input->post('month') . '"'
+            );
         $this->datatables->edit_column('checkbox', $this->show_gp_action_row('$1',  '$2'), 'cus.customer_id, gp_check_chk_id(cus.customer_id, "' . $temp_qt_id . '")');
         // ->add_column('action', '$1', 'payment_action_row(' . $this->PrimaryKey . ')');
+        $this->datatables->edit_column('opening_bal', '$1', 'ledger_opening_bal_row(' . $this->PrimaryKey . ',"'.$this->input->post('month').'")');
+        $this->datatables->edit_column('closing_bal', '$1', 'ledger_closing_bal_row(' . $this->PrimaryKey . ',cus.customer_id,credit,debit,opening_bal,"'.$this->input->post('month').'")');
         $this->datatables->unset_column($this->PrimaryKey);
         $this->datatables->unset_column('cus.customer_id');
         $this->datatables->group_by('cp.customer_id');
@@ -167,6 +178,7 @@ EOF;
     function view_details($customer_id)
     {
         $data['customer_id'] = $customer_id;
+        $data['filter_month'] = $this->input->get('month');
         $customer_info = $this->Common->get_info($customer_id, TBL_CUSTOMER, 'customer_id');
         $data['page_title'] = "Manage " . $customer_info->customer_name . ' Ledger';
         $data['main_content'] = $this->view_name . '/detail';
@@ -193,9 +205,13 @@ EOF;
 
 
 
-    function action_row($id)
+    function action_row($id, $month = '')
     {
         $url = base_url() . $this->controllers . '/view_details/' . $id;
+
+        if ($month != '') {
+            $url .= '?month=' . $month;
+        }
         $action = <<<EOF
             <div class="tooltip-top">
                 <a data-original-title="Edit {$this->title}" data-placement="top" data-toggle="tooltip" href="{$url}" class="btn btn-xs btn-default btn-equal btn-mini open_my_form_form" data-id="{$id}" data-control="{$this->controllers}"><i class="fa fa-eye"></i></a>
@@ -254,23 +270,53 @@ EOF;
         if ($this->input->post()) {
             $isAllChecked = $this->input->post('isAllChecked');
             $hasAnyCustomer = $this->input->post('hasAnyCustomer');
+
+            $opening_date = date('Y-m-01', strtotime($this->input->post('month') . '-01 +1 month'));
             if ($isAllChecked == 'true') {
                 $customer_ids = $this->Common->get_all_info(1, TBL_LEDGER, 1, '', 'DISTINCT(customer_id)');
                 if (!empty($customer_ids)) {
                     foreach ($customer_ids as $customer) {
-                        $data_remove = $this->Remove_records->remove_data($customer->customer_id, 'customer_name', TBL_ORDER_HDR);
-                        $data_remove = $this->Remove_records->remove_data($customer->customer_id, 'customer_id', TBL_CUSTOMER_PAYMENT);
-                        $data_remove = $this->Remove_records->remove_data($customer->customer_id, 'customer_id', TBL_LEDGER);
+                        $last_ledger = $this->Common->get_info($customer->customer_id, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"','balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc')); 
+                        
+                        $last_ledger = $this->Common->get_info($customer->customer_id, $this->table_name, 'customer_id','','balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));
+
+                        $next_ledger = $this->Common->get_info($customer->customer_id, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($opening_date)).'" AND is_opening_bal=1','ledger_id,balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));
+
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer->customer_id, 'customer_name', TBL_ORDER_HDR, 'DATE_FORMAT(order_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer->customer_id, 'customer_id', TBL_CUSTOMER_PAYMENT,'DATE_FORMAT(payment_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer->customer_id, 'customer_id', TBL_LEDGER,'DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
                         $data_remove = $this->Remove_records->remove_data_with_where(1,1,TBL_ORDER_DTL,'order_hdr_id NOT IN (SELECT order_hdr_id FROM '.TBL_ORDER_HDR.')');
-                        $ledger_entry = array(
-                            "customer_id" => $customer->customer_id,
-                            "txn_date" => date('Y-m-d'),
-                            "remark" => 'Opning Balance',
-                            "credit" => 0,
-                            "debit" => 0,
-                            "balance" => 0,
-                        );
-                        $this->Common->add_info($this->table_name, $ledger_entry);
+
+                        $balance = !empty($last_ledger) ? (float)$last_ledger->balance : 0;
+
+                        if(!empty($next_ledger)){
+
+                            $new_balance = $balance + (!empty($next_ledger) ? (float)$next_ledger->balance : 0);
+
+                            $ledger_entry = array(
+                                "txn_date"    => $opening_date,
+                                "remark"      => 'Opening Balance',
+                                "credit"      => ($new_balance > 0) ? $new_balance : 0,
+                                "debit"       => ($new_balance < 0) ? $new_balance : 0,
+                                "balance"     => $new_balance
+                            );
+
+                            $this->Common->update_info($next_ledger->ledger_id, $this->table_name, $ledger_entry, 'ledger_id');
+
+                            recalculate_ledger($customer->customer_id,$opening_date);
+                        }else{
+                            $ledger_entry = array(
+                                "customer_id" => $customer->customer_id,
+                                "txn_date"    => $opening_date,
+                                "remark"      => 'Opening Balance',
+                                "credit"      => ($balance > 0) ? $balance : 0,
+                                "debit"       => ($balance < 0) ? $balance : 0,
+                                "balance"     => $balance,
+                                "is_opening_bal" => 1,
+                            );
+
+                            $this->Common->add_info($this->table_name, $ledger_entry);
+                        }
                     }
                 }
                $response = array("status" => "ok", "heading" => "Data cleared successfully...", "message" => "Data cleared successfully.");
@@ -278,19 +324,45 @@ EOF;
                 $customer_ids = $this->input->post('customer_ids[]');
                 if (!empty($customer_ids)) {
                     foreach ($customer_ids as $customer) {
-                        $data_remove = $this->Remove_records->remove_data($customer, 'customer_name', TBL_ORDER_HDR);
-                        $data_remove = $this->Remove_records->remove_data($customer, 'customer_id', TBL_CUSTOMER_PAYMENT);
-                        $data_remove = $this->Remove_records->remove_data($customer, 'customer_id', TBL_LEDGER);
+                        $last_ledger = $this->Common->get_info($customer, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"','balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));     
+                        
+                        $next_ledger = $this->Common->get_info($customer, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($opening_date)).'" AND is_opening_bal=1','ledger_id,balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));
+
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer, 'customer_name', TBL_ORDER_HDR, 'DATE_FORMAT(order_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer, 'customer_id', TBL_CUSTOMER_PAYMENT,'DATE_FORMAT(payment_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
+                        $data_remove = $this->Remove_records->remove_data_with_where($customer, 'customer_id', TBL_LEDGER,'DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
                         $data_remove = $this->Remove_records->remove_data_with_where(1,1,TBL_ORDER_DTL,'order_hdr_id NOT IN (SELECT order_hdr_id FROM '.TBL_ORDER_HDR.')');
-                        $ledger_entry = array(
-                            "customer_id" => $customer,
-                            "txn_date" => date('Y-m-d'),
-                            "remark" => 'Opning Balance',
-                            "credit" => 0,
-                            "debit" => 0,
-                            "balance" => 0,
-                        );
-                        $this->Common->add_info($this->table_name, $ledger_entry);
+
+                        $balance = !empty($last_ledger) ? (float)$last_ledger->balance : 0;
+
+                        if(!empty($next_ledger)){
+
+                            $new_balance = $balance + (!empty($next_ledger) ? (float)$next_ledger->balance : 0);
+
+                            $ledger_entry = array(
+                                "txn_date"    => $opening_date,
+                                "remark"      => 'Opening Balance',
+                                "credit"      => ($new_balance > 0) ? $new_balance : 0,
+                                "debit"       => ($new_balance < 0) ? $new_balance : 0,
+                                "balance"     => $new_balance
+                            );
+
+                            $this->Common->update_info($next_ledger->ledger_id, $this->table_name, $ledger_entry, 'ledger_id');
+
+                            recalculate_ledger($customer,$opening_date);
+                        }else{
+                            $ledger_entry = array(
+                                "customer_id" => $customer,
+                                "txn_date"    => $opening_date,
+                                "remark"      => 'Opening Balance',
+                                "credit"      => ($balance > 0) ? $balance : 0,
+                                "debit"       => ($balance < 0) ? $balance : 0,
+                                "balance"     => $balance,
+                                "is_opening_bal" => 1,
+                            );
+
+                            $this->Common->add_info($this->table_name, $ledger_entry);
+                        }
                     }
                 }
                 $response = array("status" => "ok", "heading" => "Data cleared successfully...", "message" => "Data cleared successfully.");

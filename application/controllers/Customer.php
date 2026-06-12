@@ -59,7 +59,16 @@ class Customer extends CI_Controller {
                     ->set_rules('customer_name', 'Customer Name', 'required')
                     // ->set_rules('customer_email', 'Customer Email', 'required')
                     ->set_rules('customer_mobile', 'Customer Mobile', 'required')
-                    ->set_rules('customer_whatsapp_number', 'Customer WhatsApp Number', 'required');
+                    ->set_rules('customer_whatsapp_number', 'Customer WhatsApp Number', 'required')
+                    ->set_rules('is_gst', 'Customer has GST', 'required');
+
+            if ($this->input->post('is_gst') == '1') {
+                $this->form_validation->set_rules(
+                    'GST',
+                    'GST Number',
+                    'required|regex_match[/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{3}$/]'
+                );
+            }
             $this->form_validation->set_message('required', 'The %s field is required.');
             $this->form_validation->set_error_delimiters($error_element[0], $error_element[1]);
 
@@ -69,7 +78,8 @@ class Customer extends CI_Controller {
 
                 $post_data = array(
                     "OwnerName" => $this->input->post('OwnerName'),
-                    "GST" => $this->input->post('GST'),
+                    "is_gst" => $this->input->post('is_gst'),
+                    "GST" => ($this->input->post('is_gst') ?? 0) == 1?$this->input->post('GST'):null,
                     "customer_name" => $this->input->post('customer_name'),
                     "customer_email" => $this->input->post('customer_email') ?? '',
                     "customer_mobile" => $this->input->post('customer_mobile'),

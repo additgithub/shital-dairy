@@ -9,6 +9,19 @@ $address = array('name' => 'address', 'id' => 'address', 'value' => (isset($data
 $GST = array('name' => 'GST', 'id' => 'GST', 'value' => (isset($data_info) && $data_info->GST != "") ? $data_info->GST : set_value('GST'), 'class' => "form-control",);
 $OwnerName = array('name' => 'OwnerName', 'id' => 'OwnerName', 'value' => (isset($data_info) && $data_info->OwnerName != "") ? $data_info->OwnerName : set_value('OwnerName'), 'class' => "form-control",);
 
+$is_gst_yes = array(
+    'name'    => 'is_gst',
+    'id'      => 'is_gst_yes',
+    'value'   => 1,
+    'checked' => (isset($data_info) && $data_info->is_gst == 1) || set_value('is_gst') == 1
+);
+
+$is_gst_no = array(
+    'name'    => 'is_gst',
+    'id'      => 'is_gst_no',
+    'value'   => '0',
+    'checked' => (isset($data_info) && $data_info->is_gst == 0) || set_value('is_gst') == 0
+);
 
 if (isset($data_info) && $data_info->$DataID > 0) {
     $data_id = array('name' => $DataID, 'id' => $DataID, 'value' => (isset($data_info) && $data_info->$DataID > 0) ? $data_info->$DataID : "", 'type' => 'hidden',);
@@ -94,7 +107,24 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                                 ?>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="form-group col-md-4">
+                            <label class="form-label">Is Customer has GST ?</label>
+
+                            <div class="mt-2 radio-group">
+                                <label class="">
+                                    <?php echo form_radio($is_gst_yes); ?>
+                                    Yes
+                                </label>
+
+                                <label>
+                                    <?php echo form_radio($is_gst_no); ?>
+                                    No
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4 gst-section <?= (isset($data_info) && $data_info->is_gst == 1)?'display':'' ?>">
                             <label class="form-label">GST Number</label>
                             <div class="input-with-icon  right">
 
@@ -104,7 +134,7 @@ $form_attr = array('class' => 'default_form', 'id' => 'course_frm', 'name' => 'c
                             </div>
                         </div>
 
-                        <div class="form-group col-md-8">
+                        <div class="form-group col-md-12">
                             <label>Address</label>
                             <?= form_textarea($address); ?>
                         </div>

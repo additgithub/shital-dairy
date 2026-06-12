@@ -119,11 +119,11 @@
                         <thead>
                             <tr>
 
-                                <th width="20%">Order No</th>
-                                <th width="20%">Order Date</th>
+                                <th width="15%">Order No</th>
+                                <th width="15%">Order Date</th>
                                 <th width="20%">Customer Name</th>
                                 <th width="20%">Customer Number</th>
-                                <th width="20%">Total Amount</th>
+                                <th width="10%">Total Amount</th>
                                 <!-- <th width="20%">is Paid</th> -->
                                 <!-- <th width="20%">is Delivered</th> -->
                                 <th width="20%" class="hidden-phone">Action</th>

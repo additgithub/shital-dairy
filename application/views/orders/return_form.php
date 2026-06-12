@@ -194,7 +194,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Qty (KG/PCS)</label>
-            <input type="number" name="item_qty[${detail_id}]" class="form-control item_qty" min="1"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required readonly>
+            <input type="number" name="item_qty[${detail_id}]" class="form-control item_qty" min="0" step="0.01"  value="${qty}" data-price="0" oninput="updateRowPrice(this)" required readonly>
         </div>
         <div class="form-group col-md-2 cus_filds">
             <label>Price Per KG/PCS</label>
@@ -203,7 +203,7 @@ $submit_btn = array('name' => 'submit_btn', 'id' => 'submit_btn', 'value' => 'Su
             
         <div class="form-group col-md-2 cus_filds">
             <label>Return Qty (KG/PCS)</label>
-            <input type="number" name="return_qty[${detail_id}]" class="form-control return_qty" value="${return_qty}" min="0" oninput="updateRowPrice(this)">
+            <input type="number" name="return_qty[${detail_id}]" class="form-control return_qty" value="${return_qty}" min="0" step="0.01" oninput="updateRowPrice(this)">
         </div>
 
         <div class="form-group col-md-2 cus_filds">

@@ -592,17 +592,6 @@ EOF;
 
             $payload = [
                 [
-                    "type" => "header",
-                    "parameters" => [
-                        [
-                            "type" => "image",
-                            "image" => [
-                                "link" => base_url("assets/img/logo.png")
-                            ]
-                        ]
-                    ]
-                ],
-                [
                     "type" => "body",
                     "parameters" => [
                         ["type" => "text", "parameter_name" =>"customer_name", "text" => $customer->customer_name],

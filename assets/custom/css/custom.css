@@ -112,3 +112,16 @@ div.dataTables_wrapper {
   object-fit: cover;
   display: block;
 }
+
+.gst-section:not(.display){
+  display: none;
+}
+
+.radio-group {
+    display: flex;
+    gap: 10px;
+}
+
+.radio-group label {
+    margin: 0;
+}

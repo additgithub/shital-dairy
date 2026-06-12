@@ -116,24 +116,35 @@
     </tbody>
     <tfoot>
         <?php
-            if(!empty($order->delivery_charges)){ ?>
+            if(!empty($order->delivery_charges) && $order->delivery_charges>0){ ?>
                 <tr>
                     <td colspan="5" style="text-align:right;"><strong>Delivery Charges:</strong></td>
                     <td><strong><?= number_format($order->delivery_charges, 2) ?></strong></td>
                 </tr>
         <?php } ?>
         <?php
-            if(!empty($order->dry_ice_box_charges)){ ?>
+            if(!empty($order->dry_ice_box_charges) && $order->dry_ice_box_charges>0){ ?>
                 <tr>
                     <td colspan="5" style="text-align:right;"><strong>Dry Ice Box Charges:</strong></td>
                     <td><strong><?= number_format($order->dry_ice_box_charges, 2) ?></strong></td>
                 </tr>
         <?php } ?>
         <?php
-            if(!empty($order->other_charges)){ ?>
+            if(!empty($order->other_charges) && $order->other_charges>0){ ?>
                 <tr>
                     <td colspan="5" style="text-align:right;"><strong>Other Charges:</strong></td>
                     <td><strong><?= number_format($order->other_charges, 2) ?></strong></td>
+                </tr>
+        <?php } ?>
+        <?php
+            if(!empty($order->tax_amount) && $order->tax_amount>0){ ?>
+                <tr>
+                    <td colspan="5" style="text-align:right;"><strong>CGST (2.5%):</strong></td>
+                    <td><strong><?= number_format($order->tax_amount / 2, 2) ?></strong></td>
+                </tr>
+                <tr>
+                    <td colspan="5" style="text-align:right;"><strong>SGST (2.5%):</strong></td>
+                    <td><strong><?= number_format($order->tax_amount / 2, 2) ?></strong></td>
                 </tr>
         <?php } ?>
         <tr>

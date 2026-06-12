@@ -118,6 +118,8 @@
                         <div class="form-group col-md-4">
                             
                             <input type="hidden" id="customer_name" name="customer_id" class="search_mq" value="<?php echo isset($customer_id) ? $customer_id : ''; ?>">
+
+                            <input type="hidden" id="filter_month" name="filter_month" class="search_mq" value="<?php echo isset($filter_month) ? $filter_month : ''; ?>">
                         </div>
                     </div>
                     <table class="table common_datatable" data-control="ledger" data-mathod="detail_manage">

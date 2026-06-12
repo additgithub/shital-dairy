@@ -3483,6 +3483,7 @@ function debit_ledger($customer_id, $amount, $order_id, $old_amount = 0, $order_
     if (!isset($ci->Common)) {
         $ci->load->model('Common');
     }
+    $ci->db->trans_start();
     $customer_last_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', '', 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
     $balance = 0;
     if (!empty($customer_last_entry)) {
@@ -3497,7 +3498,7 @@ function debit_ledger($customer_id, $amount, $order_id, $old_amount = 0, $order_
         $customer_balance_amount = $amount;
     }
 
-    $customer_order_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'order_id=' . $order_id, 'balance', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
+    $customer_order_entry = $ci->Common->get_info($customer_id, TBL_LEDGER, 'customer_id', 'order_id=' . $order_id, 'balance,txn_date', false, false, array('field' => 'ledger_id', 'order' => 'DESC'));
 
 
     if (!empty($customer_order_entry)) {
@@ -3505,7 +3506,18 @@ function debit_ledger($customer_id, $amount, $order_id, $old_amount = 0, $order_
         $ci->Common->update_info($customer_id, TBL_CUSTOMER, array('balance' => $customer_balance_amount), 'customer_id');
         $ci->Common->update_info($customer_id, TBL_LEDGER, array('debit' => $amount, 'txn_date' => $order_date), 'customer_id', 'order_id=' . $order_id);
 
-        recalculate_ledger($customer_id,$order_date);
+        $recalculate_date = $order_date;
+
+        if (!empty($customer_order_entry) && !empty($customer_order_entry->txn_date)) {
+            $old_date = $customer_order_entry->txn_date;
+
+            // Take the smaller (earlier) date
+            if (strtotime($old_date) < strtotime($order_date)) {
+                $recalculate_date = $old_date;
+            }
+        }
+
+        recalculate_ledger($customer_id,$recalculate_date);
     } else {
         $ci->Common->update_info($customer_id, TBL_CUSTOMER, array('balance' => $customer_balance_amount), 'customer_id');
         $ci->Common->add_info(TBL_LEDGER, array(
@@ -3514,17 +3526,22 @@ function debit_ledger($customer_id, $amount, $order_id, $old_amount = 0, $order_
             'order_id'      => $order_id,
             'debit'          => $amount,
             'credit'          => 0,
-            'balance'          => $balance,
+            'balance' => 0,
             'remark'          => $order_no,
             'created_on'   => date("Y-m-d H:i:s"),
             'created_by'  => $ci->tank_auth->get_user_id(),
         ));
         recalculate_ledger($customer_id,$order_date);
     }
+    $ci->db->trans_complete();
 }
 function credit_ledger($customer_id, $amount, $payment_id, $remark, $old_amount = 0, $payment_type, $payment_date)
 {
+
+    // log_message('info', 'credit_ledger: ' . $payment_date);
+
     $ci = &get_instance();
+    $ci->db->trans_start();
     // Make sure Common model is loaded
     if (!isset($ci->Common)) {
         $ci->load->model('Common');
@@ -3548,9 +3565,18 @@ function credit_ledger($customer_id, $amount, $payment_id, $remark, $old_amount 
 
     if (!empty($customer_payment_entry)) {
 
-        $ci->Common->update_info($customer_id, TBL_LEDGER, array('credit' => $amount), 'customer_id', 'payment_id=' . $payment_id);
+        $ci->Common->update_info($customer_id, TBL_LEDGER, array('credit' => $amount,'txn_date' => $payment_date), 'customer_id', 'payment_id=' . $payment_id);
+        $recalculate_date = $payment_date;
 
-        recalculate_ledger($customer_id,$customer_payment_entry->txn_date);
+        if (!empty($customer_payment_entry) && !empty($customer_payment_entry->txn_date)) {
+            $old_date = $customer_payment_entry->txn_date;
+
+            // Take the smaller (earlier) date
+            if (strtotime($old_date) < strtotime($payment_date)) {
+                $recalculate_date = $old_date;
+            }
+        }
+        recalculate_ledger($customer_id,$recalculate_date);
     } else {
         $ci->Common->add_info(TBL_LEDGER, array(
             'customer_id'      => $customer_id,
@@ -3558,7 +3584,7 @@ function credit_ledger($customer_id, $amount, $payment_id, $remark, $old_amount 
             'payment_id'      => $payment_id,
             'debit'          => 0,
             'credit'          => $amount,
-            'balance'          => $balance,
+            'balance'          => 0,
             'remark'          => ($payment_type) ? $payment_type : '',
             'created_on'   => date("Y-m-d H:i:s"),
             'created_by'  => $ci->tank_auth->get_user_id(),
@@ -3566,53 +3592,51 @@ function credit_ledger($customer_id, $amount, $payment_id, $remark, $old_amount 
 
         recalculate_ledger($customer_id,$payment_date);
     }
+    $ci->db->trans_complete();
 }
 
 function recalculate_ledger($customer_id, $from_date)
 {
     $ci = &get_instance();
 
-    // ✅ 1. Get last correct balance BEFORE from_date
+    $month = date('Y-m', strtotime($from_date));
+
     $prev = $ci->db
         ->where('customer_id', $customer_id)
         ->where('txn_date <', $from_date)
-        ->where('DATE_FORMAT(txn_date,"%Y-%m")=', date('Y-m',strtotime($from_date)))
+        ->where('DATE_FORMAT(txn_date,"%Y-%m") =', $month)
         ->order_by('txn_date', 'DESC')
+        ->order_by('is_opening_bal', 'ASC')
         ->order_by('ledger_id', 'DESC')
         ->get(TBL_LEDGER)
         ->row();
 
-    
-    $running_balance = $prev ? $prev->balance : 0;
+    $running_balance = $prev ? (float)$prev->balance : 0;
 
-    // ✅ 2. Get all entries from that date onwards (ALL types)
     $ledger = $ci->db
         ->where('customer_id', $customer_id)
         ->where('txn_date >=', $from_date)
-        ->where('DATE_FORMAT(txn_date,"%Y-%m")=', date('Y-m',strtotime($from_date)))
+        ->where('DATE_FORMAT(txn_date,"%Y-%m") =', $month)
         ->order_by('txn_date', 'ASC')
-        ->order_by('ledger_id', 'ASC') // VERY IMPORTANT
+        ->order_by('is_opening_bal', 'DESC')
+        ->order_by('ledger_id', 'ASC')
         ->get(TBL_LEDGER)
         ->result();
 
-    // ✅ 3. Recalculate forward only
     foreach ($ledger as $row) {
 
-        $running_balance += ($row->credit - $row->debit);
-        
-        $ci->db->reset_query();
-        
-        $ci->db->where('ledger_id', $row->ledger_id);
-        $ci->db->update(TBL_LEDGER, [
-            'balance' => $running_balance
-        ]);
+        $running_balance += ((float)$row->credit - (float)$row->debit);
+
+        $ci->db->where('ledger_id', $row->ledger_id)
+            ->update(TBL_LEDGER, [
+                'balance' => $running_balance
+            ]);
     }
 
-    // ✅ 4. Update final customer balance
-    $ci->db->where('customer_id', $customer_id);
-    $ci->db->update(TBL_CUSTOMER, [
-        'balance' => $running_balance
-    ]);
+    $ci->db->where('customer_id', $customer_id)
+        ->update(TBL_CUSTOMER, [
+            'balance' => $running_balance
+        ]);
 }
 
 function ledger_detail_action_row($id, $credit_value, $debit_value, $order_id, $payment_id)
