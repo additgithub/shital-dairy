@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Ledger Report</title>
+    <title>Outstanding Report</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,7 +35,7 @@
 
 <body>
 
-    <h2 class="center">Ledger Report</h2>
+    <h2 class="center">Outstanding Report</h2>
     <p><strong>Month:</strong> <?=date("F, Y", strtotime($month))?></p>
 
 
@@ -43,10 +43,7 @@
         <thead>
             <tr>
                 <th>Customer Name</th>
-                <th>Opening Bal</th>
-                <th>Credit</th>
-                <th>Debit</th>
-                <th>Closing Bal</th>
+                <th>Outstanding Amount</th>
             </tr>
         </thead>
         <tbody>
@@ -54,25 +51,16 @@
                 $total_opening_bal = $total_credit = $total_debit = $total_closing_bal = 0;
                 
                 foreach ($reports as $row){ 
-                    $total_opening_bal += $row->opening_bal;
-                    $total_credit += $row->credit;
-                    $total_debit += $row->debit;
                     $total_closing_bal += $row->closing_bal;
             ?>
                 <tr>
                     <td ><?= $row->customer_name; ?></td>
-                    <td align="right"><?= number_format($row->opening_bal, 2); ?></td>
-                    <td align="right"><?= number_format($row->credit, 2); ?></td>
-                    <td align="right"><?= number_format($row->debit, 2); ?></td>
                     <td align="right"><?= number_format($row->closing_bal, 2); ?></td>
                 </tr>
             <?php } ?>
 
             <tr>
                 <th >Total</th>
-                <th align="right"><?= number_format($total_opening_bal, 2); ?></th>
-                <th align="right"><?= number_format($total_credit, 2); ?></th>
-                <th align="right"><?= number_format($total_debit, 2); ?></th>
                 <th align="right"><?= number_format($total_closing_bal, 2); ?></th>
             </tr>
         </tbody>

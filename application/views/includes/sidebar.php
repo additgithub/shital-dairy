@@ -41,7 +41,7 @@
 
                 <li class="start <?php echo ($this->uri->segment(1) == "items") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('items'); ?>">
-                        <i class="fa fa-list-alt"></i>
+                        <i class="fa fa-cubes"></i>
                         <span class="title">Items</span>
                     </a>
                 </li>
@@ -88,28 +88,40 @@
                         <span class="title">Item Wise Report</span>
                     </a>
                 </li>
-                 <li class="start <?php echo ($this->uri->segment(1) == "reconcile" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
+                <li class="start <?php echo ($this->uri->segment(1) == "reconcile" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('reconcile'); ?>">
-                        <i class="fa fa-book"></i>
+                        <i class="fa fa-check-square-o"></i>
                         <span class="title">Reconcile</span>
+                    </a>
+                </li>
+                <li class="start <?php echo ($this->uri->segment(1) == "order_reconcile" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('order_reconcile'); ?>">
+                        <i class="fa fa-check-circle"></i>
+                        <span class="title">Order Reconcile</span>
+                    </a>
+                </li>
+                <li class="start <?php echo ($this->uri->segment(1) == "outstanding_report") ? "active" : ''; ?>">
+                    <a href="<?php echo base_url('outstanding_report'); ?>">
+                        <i class="fa fa-exclamation-circle"></i>
+                        <span class="title">Outstanding Report</span>
                     </a>
                 </li>
                  <li class="start <?php echo ($this->uri->segment(1) == "ledger" && $this->uri->segment(2) == "ledger_report") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('ledger/ledger_report'); ?>">
-                        <i class="fa fa-book"></i>
+                        <i class="fa fa-file-text-o"></i>
                         <span class="title">Summary Report</span>
                     </a>
                 </li>
                  <li class="start <?php echo ($this->uri->segment(1) == "sale-register" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('sale-register'); ?>">
-                        <i class="fa fa-book"></i>
+                        <i class="fa fa-list-alt"></i>
                         <span class="title">Sales Register Report</span>
                     </a>
                 </li>
 
                 <li class="start <?php echo ($this->uri->segment(1) == "client-sale-register" && $this->uri->segment(2) == "") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('client-sale-register'); ?>">
-                        <i class="fa fa-book"></i>
+                        <i class="fa fa-briefcase"></i>
                         <span class="title">Client Wise Sales Register</span>
                     </a>
                 </li>
@@ -130,7 +142,7 @@
             <?php } else if ($this->tank_auth->get_user_role_id() == '2') { ?>
                 <li class="start <?php echo ($this->uri->segment(1) == "orders") ? "active" : ''; ?>">
                     <a href="<?php echo base_url('orders'); ?>">
-                        <i class="fa fa-user"></i>
+                        <i class="fa fa-shopping-cart"></i>
                         <span class="title">Orders</span>
                     </a>
                 </li>

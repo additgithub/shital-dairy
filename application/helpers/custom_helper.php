@@ -3599,41 +3599,38 @@ function recalculate_ledger($customer_id, $from_date)
 {
     $ci = &get_instance();
 
-    $month = date('Y-m', strtotime($from_date));
+    $month_start = date('Y-m-01', strtotime($from_date));
+    $month_end   = date('Y-m-t', strtotime($from_date));
 
-    $prev = $ci->db
-        ->where('customer_id', $customer_id)
-        ->where('txn_date <', $from_date)
-        ->where('DATE_FORMAT(txn_date,"%Y-%m") =', $month)
-        ->order_by('txn_date', 'DESC')
-        ->order_by('is_opening_bal', 'ASC')
-        ->order_by('ledger_id', 'DESC')
-        ->get(TBL_LEDGER)
-        ->row();
-
-    $running_balance = $prev ? (float)$prev->balance : 0;
-
+    // Month ki sari ledger entries nikalo
     $ledger = $ci->db
         ->where('customer_id', $customer_id)
-        ->where('txn_date >=', $from_date)
-        ->where('DATE_FORMAT(txn_date,"%Y-%m") =', $month)
+        ->where('txn_date >=', $month_start)
+        ->where('txn_date <=', $month_end)
         ->order_by('txn_date', 'ASC')
-        ->order_by('is_opening_bal', 'DESC')
-        ->order_by('ledger_id', 'ASC')
+        ->order_by('is_opening_bal', 'DESC') // Opening first
+        ->order_by('debit', 'DESC')           // Orders (Debit) first
+        ->order_by('credit', 'DESC')          // Payments (Credit) after
+        ->order_by('ledger_id', 'ASC')        // Stable ordering
         ->get(TBL_LEDGER)
         ->result();
+
+    $running_balance = 0;
 
     foreach ($ledger as $row) {
 
         $running_balance += ((float)$row->credit - (float)$row->debit);
 
-        $ci->db->where('ledger_id', $row->ledger_id)
+        $ci->db
+            ->where('ledger_id', $row->ledger_id)
             ->update(TBL_LEDGER, [
                 'balance' => $running_balance
             ]);
     }
 
-    $ci->db->where('customer_id', $customer_id)
+    // Customer balance = current month's closing balance
+    $ci->db
+        ->where('customer_id', $customer_id)
         ->update(TBL_CUSTOMER, [
             'balance' => $running_balance
         ]);
@@ -3688,7 +3685,7 @@ function ledger_opening_bal_row($id,$date='')
 
     return 0;
 }
-function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_bal,$date=''){
+function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_bal,$date='',$is_outstanding=false){
     // return ($opening_bal + $debit) - $credit;
     // return ($opening_bal + $credit) - $debit;
      $ci = &get_instance();
@@ -3715,7 +3712,13 @@ function ledger_closing_bal_row($ledger_id,$customer_id,$credit,$debit,$opening_
     if(!empty($OBal)){
         $tOBal = $OBal->TotalOBal; 
     }
-    return ($tOBal + $tCredit - $tDebit);
+
+    $closing_balance = ($tOBal + $tCredit - $tDebit);
+
+    if($is_outstanding){
+        return ($is_outstanding && $closing_balance < 0) ? abs($closing_balance) : 0;
+    }
+    return $closing_balance;
 }
 
 function generateUniqueId($length = 16){

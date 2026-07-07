@@ -49,6 +49,20 @@ $(document).ready(function () {
        
     });
 
+    $("#download_full_outstanding").on("click", function () {
+        var customer_id = $("#customer_name").val();
+        var month   = $("#month").val();
+
+        if (month === "") {
+            showErrorMessage('Please select date range.');
+            return;
+        }
+        var url = BASE_URL + "outstanding_report/download_list_report?customer_id=" + customer_id + "&month=" + month;
+        window.open(url, "_blank");
+
+       
+    });
+
      $("#download_ledger").on("click", function () {
         var customer_id = $("#customer_name").val();
         var from_date   = $("#from_date").val();
@@ -907,7 +921,7 @@ $(document).ready(function () {
             scrollY: 200,
             scrollX: true,
             "sAjaxSource": $url,
-            "aoColumnDefs": ($id == 'reconcile_table') ? [{ "bSortable": false, "aTargets": [0] }] : [{ "bSortable": false, "aTargets": [-1] }],
+            "aoColumnDefs": ($id == 'reconcile_table' || $id == 'order_reconcile_table') ? [{ "bSortable": false, "aTargets": [0] }] : [{ "bSortable": false, "aTargets": [-1] }],
             "sDom": "<'row'<'col-md-6'l <'toolbar'>><'col-md-6'f>r>t<'row'<'col-md-12'p i>>",
             "bLengthChange": false,
             "fnServerParams": function (aoData, fnCallback) {
@@ -1158,6 +1172,53 @@ $(document).ready(function () {
                     
                     window.location.reload();
                 }, 5000);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                $('#add_edit_form').slideUp(500, function () {
+                    $('#display_update_form').html('');
+
+                });
+                showErrorMessage('There was an unknown error that occurred. You will need to refresh the page to continue working.');
+            },
+            complete: function () {
+            }
+        });
+
+        return false;
+        }
+    });
+    $('#clear_order_ledger').on('click', function (e) {
+        let isAllChecked = $('#customer_id_all').is(':checked');
+        let month = $('#month').val();
+        let hasAnyCustomer = $('input[name="customer_id[]"]').length > 0;
+        let customer_ids = $('input[name="customer_id[]"]').map(function () {
+            return $(this).val();
+        }).get();
+        if (!(isAllChecked || hasAnyCustomer)) {
+            e.preventDefault(); // stop form submit / button action
+            showErrorMessage("Please select 'All' or at least one customer.");
+            return false;
+        }else{
+            $.ajax({
+            type: 'POST',
+            url: BASE_URL + 'order_reconcile' + '/clear_orders',
+            async: false,
+            data: { isAllChecked: isAllChecked,month: month,order_ids:customer_ids },
+            dataType: 'json',
+            beforeSend: function () {
+                
+                $('#display_update_form').html('<div class="loader_wrapper"><div class="loader"></div></div>');
+                $('#add_edit_form').show();
+            },
+            success: function (returnData) {
+                if (returnData.status == "ok") {
+                        showSuccessCustom(returnData.message)
+                }
+
+                setTimeout(function () {
+                    
+                    window.location.reload();
+                }, 2000);
             },
             error: function (xhr, textStatus, errorThrown) {
                 $('#add_edit_form').slideUp(500, function () {

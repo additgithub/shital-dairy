@@ -297,26 +297,25 @@ EOF;
                                 "txn_date"    => $opening_date,
                                 "remark"      => 'Opening Balance',
                                 "credit"      => ($new_balance > 0) ? $new_balance : 0,
-                                "debit"       => ($new_balance < 0) ? $new_balance : 0,
+                                "debit"       => ($new_balance < 0) ? abs($new_balance) : 0,
                                 "balance"     => $new_balance
                             );
 
                             $this->Common->update_info($next_ledger->ledger_id, $this->table_name, $ledger_entry, 'ledger_id');
-
-                            recalculate_ledger($customer->customer_id,$opening_date);
                         }else{
                             $ledger_entry = array(
                                 "customer_id" => $customer->customer_id,
                                 "txn_date"    => $opening_date,
                                 "remark"      => 'Opening Balance',
                                 "credit"      => ($balance > 0) ? $balance : 0,
-                                "debit"       => ($balance < 0) ? $balance : 0,
+                                "debit"       => ($balance < 0) ? abs($balance) : 0,
                                 "balance"     => $balance,
                                 "is_opening_bal" => 1,
                             );
 
                             $this->Common->add_info($this->table_name, $ledger_entry);
                         }
+                        recalculate_ledger($customer->customer_id,$opening_date);
                     }
                 }
                $response = array("status" => "ok", "heading" => "Data cleared successfully...", "message" => "Data cleared successfully.");
@@ -325,8 +324,9 @@ EOF;
                 if (!empty($customer_ids)) {
                     foreach ($customer_ids as $customer) {
                         $last_ledger = $this->Common->get_info($customer, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"','balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));     
-                        
+
                         $next_ledger = $this->Common->get_info($customer, $this->table_name, 'customer_id','DATE_FORMAT(txn_date,"%Y-%m")="'. date('Y-m',strtotime($opening_date)).'" AND is_opening_bal=1','ledger_id,balance,txn_date',false,false,array('field'=>'txn_date','order'=>'desc'));
+
 
                         $data_remove = $this->Remove_records->remove_data_with_where($customer, 'customer_name', TBL_ORDER_HDR, 'DATE_FORMAT(order_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
                         $data_remove = $this->Remove_records->remove_data_with_where($customer, 'customer_id', TBL_CUSTOMER_PAYMENT,'DATE_FORMAT(payment_date,"%Y-%m")="'. date('Y-m',strtotime($this->input->post('month'))).'"');
@@ -343,26 +343,25 @@ EOF;
                                 "txn_date"    => $opening_date,
                                 "remark"      => 'Opening Balance',
                                 "credit"      => ($new_balance > 0) ? $new_balance : 0,
-                                "debit"       => ($new_balance < 0) ? $new_balance : 0,
+                                "debit"       => ($new_balance < 0) ? abs($new_balance) : 0,
                                 "balance"     => $new_balance
                             );
 
                             $this->Common->update_info($next_ledger->ledger_id, $this->table_name, $ledger_entry, 'ledger_id');
-
-                            recalculate_ledger($customer,$opening_date);
                         }else{
                             $ledger_entry = array(
                                 "customer_id" => $customer,
                                 "txn_date"    => $opening_date,
                                 "remark"      => 'Opening Balance',
                                 "credit"      => ($balance > 0) ? $balance : 0,
-                                "debit"       => ($balance < 0) ? $balance : 0,
+                                "debit"       => ($balance < 0) ? abs($balance) : 0,
                                 "balance"     => $balance,
                                 "is_opening_bal" => 1,
                             );
 
                             $this->Common->add_info($this->table_name, $ledger_entry);
                         }
+                        recalculate_ledger($customer,$opening_date);
                     }
                 }
                 $response = array("status" => "ok", "heading" => "Data cleared successfully...", "message" => "Data cleared successfully.");

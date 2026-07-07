@@ -102,7 +102,9 @@
     }
 </style>
 <div class="content">
-
+    <?php
+    add_edit_form();
+    ?>
     <div class="row-fluid">
         <div class="span12">
             <div class="grid simple ">
@@ -114,9 +116,24 @@
                 </div>
                 <div class="grid-body ">
                     <div class="row">
+                        <div class="form-group col-md-4">
+                            <label>Customer<span class="spn_required">*</span></label>
+                            <select name="customer_name" class="form-control select2 customer_select search_mq" id="customer_name">
+                                <option value="">Select Customer</option>
+                                <?php
+                                if (isset($customers) && !empty($customers)) {
+                                    foreach ($customers as $customer) {
+                                        $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
+                                        echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        
                         <?php
-                            $currentMonth = date('Y-m', strtotime('-1 months'));
-                            $minMonth = date('Y-m', strtotime('-3 months'));
+                            $currentMonth = date('Y-m', strtotime('0 months'));
+                            $minMonth = date('Y-m', strtotime('-11 months'));
                         ?>
 
                         <div class="form-group col-md-4">
@@ -132,31 +149,44 @@
                             >
                         </div>
                         <div class="form-group col-md-4">
-                            <button type="button" class="btn btn-primary" id="clear_customer_ledger" style="margin-top: 25px;">Reconcile</button>
-                            
+                            <button type="button" class="btn btn-primary" id="clear_order_ledger" style="margin-top: 25px;">Reconcile</button>                            
                         </div>
                     </div>
-                    <table class="table common_datatable" id="reconcile_table" data-control="reconcile" data-mathod="manage">
+                    <table class="table common_datatable" data-control="order_reconcile" id="order_reconcile_table" data-mathod="manage">
                         <thead>
                             <tr>
-                                <th width="10%"><input type="checkbox" class="mdc-checkbox__native-control question_id_chk_all" name="customer_ids" id="customer_id_all" value="all"> Select All</th>
-                                <th width="20%">Customer Name</th>
-                                <th width="15%">Opening Bal</th>
-                                <th width="15%">Credit</th>
-                                <th width="15%">Debit</th>
-                                <th width="15%">Closing Bal</th>
-                                <th width="10%">Action</th>
+                                <th width="15%"><input type="checkbox" class="mdc-checkbox__native-control question_id_chk_all" name="customer_ids" id="customer_id_all" value="all"> Select All</th>
+                                <th width="20%">Order No</th>
+                                <th width="15%">Order Date</th>
+                                <th width="30%">Customer Name</th>
+                                <th width="20%">Total Amount</th>
                             </tr>
                         </thead>
                         <tbody>
 
                         </tbody>
                     </table>
-                     <form class="customer_frm" id="customer_frm" name="customer_frm">
+                    <form class="customer_frm" id="customer_frm" name="customer_frm">
                             <div id="customer_div" class="hidden">
                             </div>
                         </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Return Order</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Dynamic content will load here -->
+                <div id="returnModalContent">Loading...</div>
             </div>
         </div>
     </div>

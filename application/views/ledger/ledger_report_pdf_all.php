@@ -88,9 +88,9 @@
     </table>
 
     <?php if ($index < count($reports) - 1): ?>
-        <div style="margin:40px 0; border-top:2px dashed #888;"></div>
+        <!-- <div style="margin:40px 0; border-top:2px dashed #888;"></div> -->
         <!-- or page break between customers -->
-        <!-- <div style="page-break-after:always;"></div> -->
+        <div style="page-break-after:always;"></div>
     <?php endif; ?>
 
 <?php endforeach; ?>

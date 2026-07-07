@@ -176,7 +176,7 @@ class Ledger extends CI_Controller
         $this->datatables->unset_column('cus.customer_id');
         $this->datatables->group_by('cp.customer_id');
         // $this->datatables->order_by($this->PrimaryKey, 'DESC');
-        $this->datatables->order_by('cus.customer_name', 'ASC');
+        // $this->datatables->order_by('cus.customer_name', 'ASC');
         echo $this->datatables->generate();
         //  echo $this->db->last_query();die;
     }
@@ -436,15 +436,25 @@ EOF;
             foreach ($report as &$row) {
                 // --- Order summary short format ---
                 if ($row['order_id'] > 0) {
-                    $items = $this->Common->get_all_info($row['order_id'], TBL_ORDER_DTL . ' oi', 'order_hdr_id', '', 'oi.*,it.item_name', false, [
-                        ['table' => TBL_M_ITEMS . ' it', 'on' => 'it.item_id = oi.item_id', 'type' => 'LEFT']
+                    $items = $this->Common->get_all_info($row['order_id'], TBL_ORDER_DTL . ' oi', 'oi.order_hdr_id', '', 'oi.*,it.item_name,oh.wadi_id,wd.wadi_name,oh.remarks', false, [
+                        ['table' => TBL_M_ITEMS . ' it', 'on' => 'it.item_id = oi.item_id', 'type' => 'LEFT'],
+                        ['table' => TBL_ORDER_HDR . ' oh', 'on' => 'oh.order_hdr_id = oi.order_hdr_id', 'type' => 'LEFT'],
+                        ['table' => TBL_WADI . ' wd', 'on' => 'wd.wadi_id = oh.wadi_id', 'type' => 'LEFT'],
                     ]);
 
                     $summary = [];
                     foreach ($items as $it) {
                         $summary[] = $it->item_name . " (" . $it->qty . " × " . $it->price_per_item . ")";
                     }
-                    $row['remark'] = implode(', ', $summary);
+                    $summary = implode(', ', $summary);
+
+                    if(count($items)>0 && !empty($items[0]->wadi_name) && trim($items[0]->wadi_name) != 'N/A'){
+                        $summary .= '<br />Wadi:- '.trim($items[0]->wadi_name);
+                    }
+                    if(count($items)>0 && !empty($items[0]->remarks)){
+                        $summary .= '<br />Remarks:- '.$items[0]->remarks;
+                    }
+                    $row['remark'] = $summary;
                 }
                 // --- Payment summary short format ---
                 elseif ($row['payment_id'] > 0) {

@@ -114,48 +114,39 @@
                 </div>
                 <div class="grid-body ">
                     <div class="row">
-                        <?php
-                            $currentMonth = date('Y-m', strtotime('-1 months'));
-                            $minMonth = date('Y-m', strtotime('-3 months'));
-                        ?>
-
                         <div class="form-group col-md-4">
+                            <label>Customer<span class="spn_required">*</span></label>
+                            <select name="customer_name" class="form-control select2 customer_select search_mq" id="customer_name">
+                                <option value="">Select Customer</option>
+                                <?php
+                                if (isset($customers) && !empty($customers)) {
+                                    foreach ($customers as $customer) {
+                                        $selected = ($edit_mode && $data_info->customer_name == $customer->customer_id) ? 'selected' : '';
+                                        echo "<option data-id=\"{$customer->customer_id}\" value=\"{$customer->customer_id}\" {$selected}>{$customer->customer_name}</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                         <div class="form-group col-md-3">
                             <label>Month</label>
-                            <input 
-                                type="month" 
-                                class="form-control search_mq" 
-                                name="month" 
-                                id="month"
-                                value="<?php echo $currentMonth; ?>"
-                                min="<?php echo $minMonth; ?>"
-                                max="<?php echo $currentMonth; ?>"
-                            >
+                            <input type="month" class="form-control search_mq" name="month" id="month" value="<?php echo date('Y-m'); ?>">
                         </div>
                         <div class="form-group col-md-4">
-                            <button type="button" class="btn btn-primary" id="clear_customer_ledger" style="margin-top: 25px;">Reconcile</button>
-                            
+                            <a type="button" href="javascript:;" class="btn btn-primary" id="download_full_outstanding" style="margin-top: 25px;"><i class="fa fa-download"></i> Download Report</a>
                         </div>
                     </div>
-                    <table class="table common_datatable" id="reconcile_table" data-control="reconcile" data-mathod="manage">
+                    <table class="table common_datatable" data-control="outstanding_report" data-mathod="manage">
                         <thead>
                             <tr>
-                                <th width="10%"><input type="checkbox" class="mdc-checkbox__native-control question_id_chk_all" name="customer_ids" id="customer_id_all" value="all"> Select All</th>
-                                <th width="20%">Customer Name</th>
-                                <th width="15%">Opening Bal</th>
-                                <th width="15%">Credit</th>
-                                <th width="15%">Debit</th>
-                                <th width="15%">Closing Bal</th>
-                                <th width="10%">Action</th>
+                                <th width="50%">Customer Name</th>
+                                <th width="50%">Outstanding Amount</th>
                             </tr>
                         </thead>
                         <tbody>
 
                         </tbody>
                     </table>
-                     <form class="customer_frm" id="customer_frm" name="customer_frm">
-                            <div id="customer_div" class="hidden">
-                            </div>
-                        </form>
                 </div>
             </div>
         </div>
